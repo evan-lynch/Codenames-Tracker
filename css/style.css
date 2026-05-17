@@ -438,18 +438,23 @@ body {
   border-bottom: 1px solid var(--border);
 }
 .game-item:last-child { border-bottom: none; }
-.game-item:hover { background: var(--surface2); }
+.game-item.win  { background: rgba(39,174,96,0.13); border-left: 3px solid var(--green); }
+.game-item.loss { background: rgba(204,48,16,0.13); border-left: 3px solid var(--red-bright); }
+.game-item.win:hover  { background: rgba(39,174,96,0.2); }
+.game-item.loss:hover { background: rgba(204,48,16,0.2); }
 
-.game-result-bar {
-  width: 4px;
-  height: 48px;
-  border-radius: 2px;
+.game-info { flex: 1; min-width: 0; }
+
+.result-pill {
   flex-shrink: 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  padding: 6px 14px;
+  border-radius: var(--radius);
 }
-.game-result-bar.win  { background: var(--green); }
-.game-result-bar.loss { background: var(--red); }
-
-.game-info { flex: 1; }
+.result-pill-win  { background: rgba(39,174,96,0.2);  color: var(--green); }
+.result-pill-loss { background: rgba(204,48,16,0.2);  color: var(--red-bright); }
 
 .game-date {
   font-size: 0.75rem;
@@ -472,6 +477,19 @@ body {
   text-decoration: none;
 }
 .screenshot-link:hover { text-decoration: underline; }
+
+.screenshot-preview-link {
+  display: block;
+  margin-top: 10px;
+}
+.screenshot-preview {
+  display: block;
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  transition: opacity 0.15s;
+}
+.screenshot-preview-link:hover .screenshot-preview { opacity: 0.85; }
 
 /* ── FORMS ───────────────────────────────────────── */
 .form-group { margin-bottom: 20px; }

@@ -101,14 +101,16 @@ async function loadPlayer() {
   historyEl.innerHTML = games.map(row => {
     const g = row.games;
     const resultClass = row.won ? 'win' : 'loss';
-    const resultBadge = row.won
-      ? `<span class="badge badge-win">Win</span>`
-      : `<span class="badge badge-loss">Loss</span>`;
+    const resultPill = row.won
+      ? `<span class="result-pill result-pill-win">Win</span>`
+      : `<span class="result-pill result-pill-loss">Loss</span>`;
     const teamBadge = `<span class="badge badge-${row.team}">${row.team} team</span>`;
     const roleBadge = `<span class="badge" style="background:var(--surface2);border:1px solid var(--border)">${row.role}</span>`;
 
     const screenshotLink = g.screenshot_url
-      ? `<a href="${escapeHtml(g.screenshot_url)}" target="_blank" rel="noopener" class="screenshot-link">View screenshot</a>`
+      ? `<a href="${escapeHtml(g.screenshot_url)}" target="_blank" rel="noopener" class="screenshot-preview-link">
+           <img src="${escapeHtml(g.screenshot_url)}" alt="Game screenshot" class="screenshot-preview">
+         </a>`
       : '';
 
     const notes = g.notes
@@ -116,18 +118,17 @@ async function loadPlayer() {
       : '';
 
     return `
-      <div class="game-item">
-        <div class="game-result-bar ${resultClass}"></div>
+      <div class="game-item ${resultClass}">
         <div class="game-info">
           <div class="game-date">${formatDateTime(g.created_at)}</div>
           <div class="game-details">
-            ${resultBadge}
             ${teamBadge}
             ${roleBadge}
-            ${screenshotLink}
           </div>
           ${notes}
+          ${screenshotLink}
         </div>
+        ${resultPill}
       </div>
     `;
   }).join('');
