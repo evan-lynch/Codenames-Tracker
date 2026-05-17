@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Setup</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .setup-card { max-width: 500px; margin: 60px auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; }
+    .player-status { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+    .player-status:last-child { border-bottom: none; }
+    .status-ok  { color: var(--green); font-weight: 700; }
+    .status-err { color: var(--red-bright); font-weight: 700; }
+    .status-pending { color: var(--text-muted); }
+    .warning-box { background: var(--orange-dim); border: 1px solid var(--orange); border-radius: var(--radius); padding: 12px 16px; font-size: 0.82rem; margin-bottom: 24px; color: var(--text); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="setup-card">
+      <h1 class="page-title" style="margin-bottom:8px">Test Setup</h1>
+      <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px">Creates 4 test player accounts for development.</p>
+
+      <div class="warning-box">
+        Delete this file before sharing the site with friends. It is only for local testing.
+      </div>
+
+      <div id="player-list" style="margin-bottom:24px"></div>
+
+      <button class="btn btn-primary" id="create-btn" style="width:100%;padding:13px;font-size:1rem">Create Test Players</button>
+      <p style="margin-top:12px;font-size:0.78rem;color:var(--text-muted);text-align:center">Password for all accounts: <strong>testpass123</strong></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script>
+    const testPlayers = [
+      { username: 'Alice' },
+      { username: 'Bob' },
+      { username: 'Carol' },
+      { username: 'Dave' },
+    ];
+
+    const password = 'testpass123';
+
+    function toEmail(username) {
+      return `${username.toLowerCase()}@codenames-tracker.app`;
+    }
+
+    function renderList(statuses) {
+      document.getElementById('player-list').innerHTML = testPlayers.map((p, i) => {
+        const s = statuses[i];
+        const cls = s === 'done' ? 'status-ok' : s === 'error' ? 'status-err' : 'status-pending';
+        const label = s === 'done' ? 'Created' : s === 'error' ? 'Failed' : s === 'exists' ? 'Already exists' : 'Waiting...';
+        return `
+          <div class="player-status">
+            <span>${p.username} <span style="color:var(--text-muted);font-size:0.78rem">(${toEmail(p.username)})</span></span>
+            <span class="${s === 'exists' ? 'status-ok' : cls}">${label}</span>
+          </div>`;
+      }).join('');
+    }
+
+    async function createPlayers() {
+      const btn = document.getElementById('create-btn');
+      btn.disabled = true;
+      btn.textContent = 'Creating...';
+
+      const statuses = testPlayers.map(() => 'pending');
+      renderList(statuses);
+
+      for (let i = 0; i < testPlayers.length; i++) {
+        const { username } = testPlayers[i];
+        const email = toEmail(username);
+
+        const { data: existing } = await db
+          .from('profiles')
+          .select('id')
+          .ilike('username', username)
+          .maybeSingle();
+
+        if (existing) {
+          statuses[i] = 'exists';
+          renderList(statuses);
+          continue;
+        }
+
+        const { data, error } = await db.auth.signUp({ email, password });
+
+        if (error || !data.user) {
+          statuses[i] = 'error';
+          renderList(statuses);
+          continue;
+        }
+
+        const { error: profileError } = await db
+          .from('profiles')
+          .insert({ id: data.user.id, username });
+
+        statuses[i] = profileError ? 'error' : 'done';
+        renderList(statuses);
+      }
+
+      btn.textContent = 'Done';
+      await db.auth.signOut();
+    }
+
+    const initialStatuses = testPlayers.map(() => '');
+    renderList(initialStatuses);
+    document.getElementById('create-btn').addEventListener('click', createPlayers);
+  </script>
+</body>
+</html>

@@ -382,6 +382,46 @@ body {
   font-weight: 700;
 }
 
+.stat-card .stat-sublabel {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* Role stats in profile sidebar */
+.profile-role-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.profile-role-stat {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.profile-role-label {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.profile-role-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  line-height: 1.2;
+}
+
 /* ── GAME HISTORY ────────────────────────────────── */
 .game-item {
   display: flex;

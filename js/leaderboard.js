@@ -13,7 +13,14 @@ function formatDateTime(isoStr) {
 
 // ── Profile Sidebar ──────────────────────────────
 
-function renderProfileSidebar(profile, stats) {
+function roleRateHtml(wins, total) {
+  if (total === 0) return '—';
+  const pct = Math.round(wins / total * 100);
+  const cls = pct >= 60 ? 'color-green' : pct >= 45 ? 'color-orange' : 'color-red';
+  return `<span class="${cls}">${pct}%</span> <span style="font-size:0.65rem;color:var(--text-muted)">${wins}/${total}</span>`;
+}
+
+function renderProfileSidebar(profile, stats, roleStats) {
   const sidebar = document.getElementById('profile-sidebar');
   if (!sidebar) return;
 
@@ -31,6 +38,11 @@ function renderProfileSidebar(profile, stats) {
   const rate   = games > 0 ? Math.round((wins / games) * 100) : null;
   const rateClass = rate === null ? '' : rate >= 60 ? 'color-green' : rate >= 45 ? 'color-orange' : 'color-red';
 
+  const smWins = roleStats?.smWins ?? 0;
+  const smTotal = roleStats?.smTotal ?? 0;
+  const opWins = roleStats?.opWins ?? 0;
+  const opTotal = roleStats?.opTotal ?? 0;
+
   sidebar.innerHTML = `
     <div class="profile-avatar">${escapeHtml(profile.username.charAt(0).toUpperCase())}</div>
     <div class="profile-username">${escapeHtml(profile.username)}</div>
@@ -46,6 +58,16 @@ function renderProfileSidebar(profile, stats) {
       <div class="profile-stat">
         <div class="profile-stat-value ${rateClass}">${rate !== null ? rate + '%' : '—'}</div>
         <div class="profile-stat-label">Win Rate</div>
+      </div>
+    </div>
+    <div class="profile-role-stats">
+      <div class="profile-role-stat">
+        <div class="profile-role-label">Spymaster</div>
+        <div class="profile-role-value">${roleRateHtml(smWins, smTotal)}</div>
+      </div>
+      <div class="profile-role-stat">
+        <div class="profile-role-label">Operative</div>
+        <div class="profile-role-value">${roleRateHtml(opWins, opTotal)}</div>
       </div>
     </div>
     <a href="log.html" class="btn btn-primary profile-log-btn">+ Log Game</a>
@@ -65,7 +87,24 @@ async function loadLeaderboard(profile) {
     .order('games_played', { ascending: false });
 
   const myStats = profile && data ? data.find(r => r.id === profile.id) : null;
-  renderProfileSidebar(profile, myStats);
+
+  let roleStats = null;
+  if (profile) {
+    const { data: rolePlays } = await db
+      .from('game_players')
+      .select('role, won')
+      .eq('player_id', profile.id);
+    if (rolePlays) {
+      const sm = rolePlays.filter(p => p.role === 'spymaster');
+      const op = rolePlays.filter(p => p.role === 'operative');
+      roleStats = {
+        smTotal: sm.length, smWins: sm.filter(p => p.won).length,
+        opTotal: op.length, opWins: op.filter(p => p.won).length,
+      };
+    }
+  }
+
+  renderProfileSidebar(profile, myStats, roleStats);
 
   if (error || !data) {
     tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Failed to load leaderboard.</td></tr>`;

@@ -59,6 +59,13 @@ async function loadPlayer() {
   const losses = total - wins;
   const rate = total > 0 ? Math.round((wins / total) * 100) : null;
 
+  const smGames = games.filter(r => r.role === 'spymaster');
+  const opGames = games.filter(r => r.role === 'operative');
+  const smWins  = smGames.filter(r => r.won).length;
+  const opWins  = opGames.filter(r => r.won).length;
+  const smRate  = smGames.length > 0 ? Math.round(smWins / smGames.length * 100) : null;
+  const opRate  = opGames.length > 0 ? Math.round(opWins / opGames.length * 100) : null;
+
   document.getElementById('stat-wins').textContent = wins;
   document.getElementById('stat-losses').textContent = losses;
 
@@ -69,6 +76,20 @@ async function loadPlayer() {
   } else {
     rateEl.textContent = '—';
   }
+
+  function setRoleStatEl(id, wins, total) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (total === 0) { el.textContent = '—'; return; }
+    const pct = Math.round(wins / total * 100);
+    el.textContent = `${pct}%`;
+    el.className = `stat-value ${pct >= 60 ? 'color-green' : pct >= 45 ? 'color-orange' : 'color-red'}`;
+    const sub = el.nextElementSibling?.nextElementSibling;
+    if (sub) sub.textContent = `${wins}W / ${total}G`;
+  }
+
+  setRoleStatEl('stat-sm-rate', smWins, smGames.length);
+  setRoleStatEl('stat-op-rate', opWins, opGames.length);
 
   const historyEl = document.getElementById('history-list');
 
