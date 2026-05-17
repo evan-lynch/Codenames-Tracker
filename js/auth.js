@@ -18,7 +18,6 @@ function renderNav() {
 
   if (currentUser && currentProfile) {
     el.innerHTML = `
-      <a href="log.html" class="btn btn-primary btn-sm">+ Log Game</a>
       <span class="nav-user">${currentProfile.username}</span>
       <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
     `;

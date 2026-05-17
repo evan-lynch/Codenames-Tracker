@@ -54,9 +54,21 @@ async function loadPlayer() {
   }
 
   const games = gameRows.filter(r => r.games);
+  const total = games.length;
   const wins = games.filter(r => r.won).length;
+  const losses = total - wins;
+  const rate = total > 0 ? Math.round((wins / total) * 100) : null;
 
   document.getElementById('stat-wins').textContent = wins;
+  document.getElementById('stat-losses').textContent = losses;
+
+  const rateEl = document.getElementById('stat-rate');
+  if (rate !== null) {
+    rateEl.textContent = `${rate}%`;
+    rateEl.className = `stat-value ${rate >= 60 ? 'color-green' : rate >= 45 ? 'color-orange' : 'color-red'}`;
+  } else {
+    rateEl.textContent = '—';
+  }
 
   const historyEl = document.getElementById('history-list');
 

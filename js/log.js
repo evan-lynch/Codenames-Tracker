@@ -30,6 +30,8 @@ async function init() {
 
   addPlayerRow();
   addPlayerRow();
+  addPlayerRow();
+  addPlayerRow();
 
   document.getElementById('add-player').addEventListener('click', addPlayerRow);
   document.getElementById('game-form').addEventListener('submit', submitGame);
