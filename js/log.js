@@ -7,8 +7,19 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
+function localDateString() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+async function hashFile(file) {
+  const buffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function init() {
-  const { user } = await initAuth();
+  await initAuth();
   if (!requireAuth()) return;
 
   const { data } = await db.from('profiles').select('id, username').order('username');
@@ -41,8 +52,7 @@ async function init() {
     if (file) {
       display.textContent = file.name;
       label.classList.add('has-file');
-      const url = URL.createObjectURL(file);
-      preview.src = url;
+      preview.src = URL.createObjectURL(file);
       previewWrap.style.display = 'block';
     } else {
       display.textContent = 'Click to upload screenshot';
@@ -52,9 +62,9 @@ async function init() {
   });
 }
 
-function buildPlayerSelect(selectedId = '') {
+function buildPlayerSelect() {
   const options = allProfiles.map(p =>
-    `<option value="${p.id}" ${p.id === selectedId ? 'selected' : ''}>${escapeHtml(p.username)}</option>`
+    `<option value="${p.id}">${escapeHtml(p.username)}</option>`
   ).join('');
   return `<option value="">— Player —</option>${options}`;
 }
@@ -157,38 +167,64 @@ async function submitGame(e) {
     return;
   }
 
+  const fileInput = document.getElementById('screenshot-file');
+  if (!fileInput.files[0]) {
+    showError('A screenshot is required to log a game.');
+    return;
+  }
+
   const submitBtn = document.getElementById('submit-btn');
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Saving...';
 
-  let screenshotUrl = null;
-  const fileInput = document.getElementById('screenshot-file');
+  const file = fileInput.files[0];
 
-  if (fileInput.files[0]) {
-    submitBtn.textContent = 'Uploading screenshot...';
-    try {
-      screenshotUrl = await uploadScreenshot(fileInput.files[0]);
-    } catch (err) {
-      showError(err.message);
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Log Game';
-      return;
-    }
+  submitBtn.textContent = 'Checking screenshot...';
+  let fileHash;
+  try {
+    fileHash = await hashFile(file);
+  } catch {
+    showError('Could not read the screenshot file.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Log Game';
+    return;
+  }
+
+  const { data: duplicate } = await db
+    .from('games')
+    .select('id')
+    .eq('screenshot_hash', fileHash)
+    .maybeSingle();
+
+  if (duplicate) {
+    showError('This screenshot has already been used to log a game. Someone may have already submitted this result.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Log Game';
+    return;
+  }
+
+  submitBtn.textContent = 'Uploading screenshot...';
+  let screenshotUrl;
+  try {
+    screenshotUrl = await uploadScreenshot(file);
+  } catch (err) {
+    showError(err.message);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Log Game';
+    return;
   }
 
   submitBtn.textContent = 'Saving...';
 
-  const playedAt = document.getElementById('played-at').value;
   const notes = document.getElementById('notes').value.trim();
-
   const { data: { user } } = await db.auth.getUser();
 
   const { data: game, error: gameError } = await db
     .from('games')
     .insert({
-      played_at: playedAt,
+      played_at: localDateString(),
       winning_team: selectedTeam,
       screenshot_url: screenshotUrl,
+      screenshot_hash: fileHash,
       notes: notes || null,
       created_by: user.id,
     })

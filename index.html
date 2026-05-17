@@ -13,11 +13,7 @@
   </nav>
 
   <main class="container">
-    <div class="leaderboard-header">
-      <h1 class="page-title" style="margin-bottom:0">Leaderboard</h1>
-      <a href="log.html" class="btn btn-primary log-game-btn">+ Log Game</a>
-    </div>
-
+    <h1 class="page-title">Leaderboard</h1>
     <div class="card">
       <table class="table">
         <thead>
@@ -25,10 +21,12 @@
             <th>#</th>
             <th>Player</th>
             <th>Wins</th>
+            <th>Losses</th>
+            <th>Win Rate</th>
           </tr>
         </thead>
         <tbody id="leaderboard-body">
-          <tr><td colspan="3" class="loading">Loading...</td></tr>
+          <tr><td colspan="5" class="loading">Loading...</td></tr>
         </tbody>
       </table>
     </div>

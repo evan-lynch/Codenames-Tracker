@@ -4,9 +4,10 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
-function formatDate(dateStr) {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric'
+function formatDateTime(isoStr) {
+  return new Date(isoStr).toLocaleString('en-US', {
+    month: 'short', day: 'numeric', year: 'numeric',
+    hour: 'numeric', minute: '2-digit'
   });
 }
 
@@ -40,7 +41,7 @@ async function loadPlayer() {
     .select(`
       id, team, role, won,
       games (
-        id, played_at, winning_team, screenshot_url, notes
+        id, played_at, winning_team, screenshot_url, notes, created_at
       )
     `)
     .eq('player_id', playerId)
@@ -85,7 +86,7 @@ async function loadPlayer() {
       <div class="game-item">
         <div class="game-result-bar ${resultClass}"></div>
         <div class="game-info">
-          <div class="game-date">${formatDate(g.played_at)}</div>
+          <div class="game-date">${formatDateTime(g.created_at)}</div>
           <div class="game-details">
             ${resultBadge}
             ${teamBadge}
