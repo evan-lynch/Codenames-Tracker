@@ -22,7 +22,10 @@ function renderNav() {
       <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
     `;
   } else {
-    el.innerHTML = `<a href="login.html" class="btn btn-ghost btn-sm nav-signin">Sign In</a>`;
+    const isMobile = /Android|iPhone|iPad|iPod|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (!isMobile) {
+      el.innerHTML = `<a href="login.html" class="btn btn-ghost btn-sm">Sign In</a>`;
+    }
   }
 }
 
