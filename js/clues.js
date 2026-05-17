@@ -115,6 +115,9 @@ function resetForm() {
   document.getElementById('clue-preview-wrap').style.display = 'none';
   document.getElementById('upload-label-text').textContent = 'Click to choose a screenshot';
   document.getElementById('upload-error').style.display = 'none';
+  const btn = document.getElementById('submit-clue-btn');
+  btn.disabled = false;
+  btn.textContent = 'Upload';
 }
 
 async function handleUpload() {
