@@ -124,6 +124,9 @@ body {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 60px;
   gap: 0;
 }
 
@@ -135,8 +138,8 @@ body {
 
 /* ── PROFILE SIDEBAR CARD ────────────────────────── */
 .profile-avatar {
-  width: 72px;
-  height: 72px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--red-dim), var(--blue-dim));
   border: 2px solid var(--border);
@@ -144,14 +147,14 @@ body {
   align-items: center;
   justify-content: center;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 2rem;
+  font-size: 2.6rem;
   color: var(--text);
-  margin: 0 auto 16px;
+  margin: 0 auto 18px;
 }
 
 .profile-username {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.6rem;
+  font-size: 2rem;
   letter-spacing: 3px;
   color: var(--text);
   margin-bottom: 24px;
@@ -202,13 +205,17 @@ body {
   padding: 14px;
   font-size: 1rem;
   margin-bottom: 10px;
+  display: block;
 }
 
 .profile-view-btn {
   width: 100%;
   text-align: center;
   padding: 10px;
+  display: block;
 }
+
+.profile-stats { width: 100%; }
 
 .profile-guest-msg {
   font-size: 0.88rem;
