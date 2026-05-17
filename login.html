@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — Codenames Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <a href="index.html" class="nav-brand" style="display:block; margin-bottom:24px"><span>Codenames</span> Tracker</a>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-signin">Sign In</button>
+        <button class="auth-tab" id="tab-signup">Create Account</button>
+      </div>
+
+      <!-- SIGN IN -->
+      <form id="signin-form">
+        <div id="signin-error" class="alert alert-error" style="display:none"></div>
+        <div class="form-group">
+          <label class="form-label" for="signin-email">Email</label>
+          <input type="email" id="signin-email" class="form-input" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signin-password">Password</label>
+          <input type="password" id="signin-password" class="form-input" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary" id="signin-btn" style="width:100%">Sign In</button>
+      </form>
+
+      <!-- SIGN UP -->
+      <form id="signup-form" style="display:none">
+        <div id="signup-error" class="alert alert-error" style="display:none"></div>
+        <div class="form-group">
+          <label class="form-label" for="signup-username">Username</label>
+          <input type="text" id="signup-username" class="form-input" required
+            placeholder="e.g. spy_master_99" maxlength="20" autocomplete="username">
+          <p class="form-hint">Letters, numbers, underscores only. 2–20 characters.</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signup-email">Email</label>
+          <input type="email" id="signup-email" class="form-input" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="signup-password">Password</label>
+          <input type="password" id="signup-password" class="form-input" required
+            minlength="6" autocomplete="new-password">
+          <p class="form-hint">At least 6 characters.</p>
+        </div>
+        <button type="submit" class="btn btn-primary" id="signup-btn" style="width:100%">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>
