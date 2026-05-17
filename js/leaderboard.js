@@ -208,28 +208,29 @@ async function loadGameHistory(userId) {
       }).join('');
     }
 
-    const ssLink = game.screenshot_url
-      ? `<a href="${escapeHtml(game.screenshot_url)}" target="_blank" rel="noopener" class="screenshot-link" style="font-size:0.7rem">Screenshot</a>`
+    const ssBtn = game.screenshot_url
+      ? `<a href="${escapeHtml(game.screenshot_url)}" target="_blank" rel="noopener" class="history-screenshot-btn">View Screenshot</a>`
       : '';
 
     const removeBtn = isOwner
-      ? `<button class="btn-remove-game" style="font-size:0.68rem;padding:3px 10px" onclick="deleteGameInline('${game.id}', ${game.screenshot_url ? `'${escapeHtml(game.screenshot_url)}'` : 'null'}, this.closest('.history-game-card'))">Remove</button>`
+      ? `<button class="btn-remove-game" onclick="deleteGameInline('${game.id}', ${game.screenshot_url ? `'${escapeHtml(game.screenshot_url)}'` : 'null'}, this.closest('.history-game-card'))">Remove</button>`
+      : '';
+
+    const cardFooter = (ssBtn || removeBtn)
+      ? `<div class="history-card-footer">${ssBtn}${removeBtn}</div>`
       : '';
 
     return `
       <div class="history-game-card" data-id="${game.id}">
         <div class="history-game-header">
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            <span class="history-game-date">${formatDateTime(game.created_at)}</span>
-            ${winBadge}
-            ${ssLink}
-          </div>
-          ${removeBtn}
+          <span class="history-game-date">${formatDateTime(game.created_at)}</span>
+          ${winBadge}
         </div>
         <div class="history-teams">
           <div class="history-team history-team-red">${compact(redPlayers)}</div>
           <div class="history-team history-team-blue">${compact(bluePlayers)}</div>
         </div>
+        ${cardFooter}
       </div>`;
   }).join('');
 }

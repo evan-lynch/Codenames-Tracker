@@ -698,20 +698,37 @@ body {
 }
 
 /* ── GAME HISTORY PANEL (inline on main page) ────── */
-.history-game-card {
+.history-panel {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 14px;
-  margin-bottom: 10px;
+  overflow: hidden;
 }
+
+.history-panel .panel-title {
+  padding: 16px 20px;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+#game-history-list {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+.history-game-card {
+  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+}
+.history-game-card:last-child { border-bottom: none; }
 
 .history-game-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .history-game-date {
@@ -719,12 +736,13 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.4px;
+  flex: 1;
 }
 
 .history-teams {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
 }
 
 .history-team {
@@ -756,8 +774,34 @@ body {
   margin: 0 4px;
   color: var(--border);
 }
-.player-win  {}
 .player-loss { opacity: 0.75; }
+
+.history-card-footer {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.history-screenshot-btn {
+  flex: 1;
+  display: block;
+  text-align: center;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--blue-bright);
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: background 0.15s;
+}
+.history-screenshot-btn:hover { background: var(--blue-dim); border-color: var(--blue-bright); }
 
 /* ── GAME HISTORY PAGE ───────────────────────────── */
 .game-card {
