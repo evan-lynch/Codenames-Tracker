@@ -11,6 +11,77 @@ function formatDateTime(isoStr) {
   });
 }
 
+// ── Shared data fetch ────────────────────────────
+
+async function fetchAllPlays() {
+  const { data } = await db
+    .from('game_players')
+    .select('game_id, player_id, team, role, won, profiles(id, username)');
+  return data ?? [];
+}
+
+function computeBestTeammate(allPlays, myId) {
+  const myGameTeam = {}, myGameWon = {};
+  for (const p of allPlays) {
+    if (p.player_id === myId) { myGameTeam[p.game_id] = p.team; myGameWon[p.game_id] = p.won; }
+  }
+  const mateMap = {};
+  for (const p of allPlays) {
+    if (p.player_id === myId) continue;
+    if (myGameTeam[p.game_id] !== p.team) continue;
+    const id = p.player_id;
+    if (!mateMap[id]) mateMap[id] = { id, wins: 0, total: 0, name: p.profiles?.username ?? '?' };
+    mateMap[id].total++;
+    if (myGameWon[p.game_id]) mateMap[id].wins++;
+  }
+  const mates = Object.values(mateMap).filter(m => m.total >= 2);
+  if (!mates.length) return null;
+  return mates
+    .map(m => ({ ...m, rate: Math.round(m.wins / m.total * 100) }))
+    .sort((a, b) => b.rate - a.rate || b.wins - a.wins)[0];
+}
+
+function computeBestTeams(allPlays) {
+  const gameTeams = {};
+  for (const p of allPlays) {
+    const key = `${p.game_id}:${p.team}`;
+    if (!gameTeams[key]) gameTeams[key] = [];
+    gameTeams[key].push(p);
+  }
+  const teamMap = {};
+  for (const players of Object.values(gameTeams)) {
+    if (players.length < 2) continue;
+    const sorted = [...players].sort((a, b) => a.player_id.localeCompare(b.player_id));
+    const key = sorted.map(p => p.player_id).join('|');
+    if (!teamMap[key]) teamMap[key] = { wins: 0, total: 0, names: sorted.map(p => p.profiles?.username ?? '?') };
+    teamMap[key].total++;
+    if (players[0].won) teamMap[key].wins++;
+  }
+  return Object.values(teamMap)
+    .filter(t => t.total >= 2)
+    .map(t => ({ ...t, rate: Math.round(t.wins / t.total * 100) }))
+    .sort((a, b) => b.rate - a.rate || b.wins - a.wins)
+    .slice(0, 20);
+}
+
+function renderBestTeams(teams) {
+  const container = document.getElementById('best-teams-list');
+  if (!container) return;
+  if (teams.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="padding:20px">Need at least 2 games together to appear here.</div>`;
+    return;
+  }
+  container.innerHTML = teams.map((t, i) => {
+    const rateClass = t.rate >= 60 ? 'color-green' : t.rate >= 45 ? 'color-orange' : 'color-red';
+    return `
+      <div class="best-team-row">
+        <span class="best-team-rank">${i + 1}</span>
+        <span class="best-team-names">${t.names.map(n => escapeHtml(n)).join(' &amp; ')}</span>
+        <span class="best-team-rate ${rateClass}">${t.rate}%</span>
+      </div>`;
+  }).join('');
+}
+
 // ── Profile Sidebar ──────────────────────────────
 
 function roleRateHtml(wins, total) {
@@ -20,7 +91,7 @@ function roleRateHtml(wins, total) {
   return `<span class="${cls}">${pct}%</span> <span style="font-size:0.65rem;color:var(--text-muted)">${wins}/${total}</span>`;
 }
 
-function renderProfileSidebar(profile, stats, roleStats) {
+function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
   const sidebar = document.getElementById('profile-sidebar');
   if (!sidebar) return;
 
@@ -70,6 +141,14 @@ function renderProfileSidebar(profile, stats, roleStats) {
         <div class="profile-role-value">${roleRateHtml(opWins, opTotal)}</div>
       </div>
     </div>
+    ${bestTeammate ? `
+    <div class="profile-best-mate">
+      <div class="profile-role-label">Best Teammate</div>
+      <div class="profile-role-value">
+        <a href="player.html?id=${bestTeammate.id}" class="color-green" style="text-decoration:none;font-weight:700">${escapeHtml(bestTeammate.name)}</a>
+        <span style="font-size:0.65rem;color:var(--text-muted)">${bestTeammate.rate}% · ${bestTeammate.wins}/${bestTeammate.total}</span>
+      </div>
+    </div>` : ''}
     <a href="log.html" class="btn btn-primary profile-log-btn">+ Log Game</a>
     <a href="player.html?id=${profile.id}" class="btn btn-ghost profile-view-btn">View My Profile</a>
   `;
@@ -77,7 +156,7 @@ function renderProfileSidebar(profile, stats, roleStats) {
 
 // ── Leaderboard ──────────────────────────────────
 
-async function loadLeaderboard(profile) {
+async function loadLeaderboard(profile, allPlays) {
   const tbody = document.getElementById('leaderboard-body');
 
   const { data, error } = await db
@@ -89,22 +168,19 @@ async function loadLeaderboard(profile) {
   const myStats = profile && data ? data.find(r => r.id === profile.id) : null;
 
   let roleStats = null;
-  if (profile) {
-    const { data: rolePlays } = await db
-      .from('game_players')
-      .select('role, won')
-      .eq('player_id', profile.id);
-    if (rolePlays) {
-      const sm = rolePlays.filter(p => p.role === 'spymaster');
-      const op = rolePlays.filter(p => p.role === 'operative');
-      roleStats = {
-        smTotal: sm.length, smWins: sm.filter(p => p.won).length,
-        opTotal: op.length, opWins: op.filter(p => p.won).length,
-      };
-    }
+  let bestTeammate = null;
+  if (profile && allPlays) {
+    const myPlays = allPlays.filter(p => p.player_id === profile.id);
+    const sm = myPlays.filter(p => p.role === 'spymaster');
+    const op = myPlays.filter(p => p.role === 'operative');
+    roleStats = {
+      smTotal: sm.length, smWins: sm.filter(p => p.won).length,
+      opTotal: op.length, opWins: op.filter(p => p.won).length,
+    };
+    bestTeammate = computeBestTeammate(allPlays, profile.id);
   }
 
-  renderProfileSidebar(profile, myStats, roleStats);
+  renderProfileSidebar(profile, myStats, roleStats, bestTeammate);
 
   if (error || !data) {
     tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Failed to load leaderboard.</td></tr>`;
@@ -155,14 +231,15 @@ async function deleteGameInline(gameId, screenshotUrl, cardEl) {
 
   cardEl.style.opacity = '0';
   cardEl.style.transition = 'opacity 0.2s';
-  setTimeout(() => {
+  setTimeout(async () => {
     cardEl.remove();
     const list = document.getElementById('game-history-list');
     if (list && !list.querySelector('.history-game-card')) {
       list.innerHTML = `<div class="empty-state">No games logged yet.</div>`;
     }
-    // Reload leaderboard stats silently
-    loadLeaderboard(currentProfile);
+    const plays = await fetchAllPlays();
+    renderBestTeams(computeBestTeams(plays));
+    loadLeaderboard(currentProfile, plays);
   }, 200);
 }
 
@@ -240,8 +317,10 @@ async function loadGameHistory(userId) {
 
 async function init() {
   const { user, profile } = await initAuth();
+  const allPlays = await fetchAllPlays();
+  renderBestTeams(computeBestTeams(allPlays));
   await Promise.all([
-    loadLeaderboard(profile),
+    loadLeaderboard(profile, allPlays),
     loadGameHistory(user?.id),
   ]);
 }

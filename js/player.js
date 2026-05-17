@@ -91,6 +91,44 @@ async function loadPlayer() {
   setRoleStatEl('stat-sm-rate', smWins, smGames.length);
   setRoleStatEl('stat-op-rate', opWins, opGames.length);
 
+  // Best teammate
+  const gameIds = games.map(r => r.games.id);
+  if (gameIds.length > 0) {
+    const { data: allGamePlays } = await db
+      .from('game_players')
+      .select('game_id, player_id, team, won, profiles(id, username)')
+      .in('game_id', gameIds);
+
+    if (allGamePlays) {
+      const myGameTeam = {}, myGameWon = {};
+      for (const row of games) { myGameTeam[row.games.id] = row.team; myGameWon[row.games.id] = row.won; }
+
+      const mateMap = {};
+      for (const p of allGamePlays) {
+        if (p.player_id === playerId) continue;
+        if (myGameTeam[p.game_id] !== p.team) continue;
+        const id = p.player_id;
+        if (!mateMap[id]) mateMap[id] = { id, wins: 0, total: 0, name: p.profiles?.username ?? '?' };
+        mateMap[id].total++;
+        if (myGameWon[p.game_id]) mateMap[id].wins++;
+      }
+
+      const mates = Object.values(mateMap).filter(m => m.total >= 2);
+      if (mates.length) {
+        const best = mates
+          .map(m => ({ ...m, rate: Math.round(m.wins / m.total * 100) }))
+          .sort((a, b) => b.rate - a.rate || b.wins - a.wins)[0];
+
+        const mateEl = document.getElementById('stat-best-mate');
+        const mateSubEl = document.getElementById('stat-best-mate-sub');
+        if (mateEl) {
+          mateEl.innerHTML = `<a href="player.html?id=${best.id}" class="player-link" style="font-size:1.1rem">${escapeHtml(best.name)}</a>`;
+        }
+        if (mateSubEl) mateSubEl.textContent = `${best.rate}% · ${best.wins}/${best.total}G`;
+      }
+    }
+  }
+
   const historyEl = document.getElementById('history-list');
 
   if (games.length === 0) {
