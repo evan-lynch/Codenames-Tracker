@@ -996,8 +996,11 @@ body {
   .main-content { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 900px) {
+@media (hover: none) and (pointer: coarse) {
   .nav-signin { display: none; }
+}
+
+@media (max-width: 900px) {
   .home-page { flex-direction: column; }
   .profile-sidebar {
     width: 100%;
