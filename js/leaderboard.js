@@ -124,11 +124,11 @@ async function loadLeaderboard(profile) {
     const isMe = profile && row.id === profile.id;
 
     return `
-      <tr ${isMe ? 'class="my-row"' : ''}>
+      <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
         <td class="rank ${rankClass}">${rankLabel}</td>
         <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
         <td class="wins-count">${row.wins}</td>
-        <td class="stat">${row.losses}</td>
+        <td class="losses-count">${row.losses}</td>
         <td class="win-rate ${row.games_played > 0 ? rateClass : ''}">${row.games_played > 0 ? rate + '%' : '—'}</td>
       </tr>`;
   }).join('');
@@ -196,15 +196,16 @@ async function loadGameHistory(userId) {
       ? `<span class="badge badge-red" style="font-size:0.6rem">Red Win</span>`
       : `<span class="badge badge-blue" style="font-size:0.6rem">Blue Win</span>`;
 
-    const redPlayers  = game.game_players.filter(p => p.team === 'red');
-    const bluePlayers = game.game_players.filter(p => p.team === 'blue');
+    const winTeam  = game.winning_team;
+    const loseTeam = winTeam === 'red' ? 'blue' : 'red';
+    const winPlayers  = game.game_players.filter(p => p.team === winTeam);
+    const losePlayers = game.game_players.filter(p => p.team === loseTeam);
 
     function compact(players) {
       return players.map(p => {
         const name = p.profiles?.username ?? '?';
         const role = p.role === 'spymaster' ? 'SM' : 'Op';
-        const result = p.won ? 'W' : 'L';
-        return `<span class="history-compact-player ${p.won ? 'player-win' : 'player-loss'}">${escapeHtml(name)} <em>${role} · ${result}</em></span>`;
+        return `<span class="history-compact-player ${p.won ? 'player-win' : 'player-loss'}">${escapeHtml(name)} <em>${role}</em></span>`;
       }).join('');
     }
 
@@ -227,8 +228,8 @@ async function loadGameHistory(userId) {
           ${winBadge}
         </div>
         <div class="history-teams">
-          <div class="history-team history-team-red">${compact(redPlayers)}</div>
-          <div class="history-team history-team-blue">${compact(bluePlayers)}</div>
+          <div class="history-team history-team-${winTeam}">${compact(winPlayers)}</div>
+          <div class="history-team history-team-${loseTeam}">${compact(losePlayers)}</div>
         </div>
         ${cardFooter}
       </div>`;

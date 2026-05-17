@@ -274,7 +274,7 @@ body {
 }
 
 .table tr:last-child td { border-bottom: none; }
-.table tbody tr:hover { background: var(--surface2); }
+.table tbody tr:hover { background: var(--surface2); cursor: pointer; }
 
 .rank {
   color: var(--text-muted);
@@ -300,6 +300,13 @@ body {
   font-size: 1.3rem;
   letter-spacing: 1px;
   color: var(--green);
+}
+
+.losses-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  color: var(--red-bright);
 }
 
 .stat { color: var(--text-muted); font-size: 1rem; }
@@ -787,6 +794,7 @@ body {
 
 .history-screenshot-btn {
   flex: 1;
+  min-width: 0;
   display: block;
   text-align: center;
   padding: 8px 12px;
@@ -801,6 +809,7 @@ body {
   letter-spacing: 0.5px;
   transition: background 0.15s;
 }
+.history-screenshot-btn:only-child { width: 100%; }
 .history-screenshot-btn:hover { background: var(--blue-dim); border-color: var(--blue-bright); }
 
 /* ── GAME HISTORY PAGE ───────────────────────────── */
@@ -876,7 +885,7 @@ body {
   border: 1px solid var(--red-dim);
   color: var(--red-bright);
   border-radius: var(--radius);
-  padding: 5px 14px;
+  padding: 8px 14px;
   font-family: 'Barlow', sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
