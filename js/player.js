@@ -53,17 +53,9 @@ async function loadPlayer() {
   }
 
   const games = gameRows.filter(r => r.games);
-  const total = games.length;
   const wins = games.filter(r => r.won).length;
-  const losses = total - wins;
-  const rate = total > 0 ? Math.round((wins / total) * 100) : 0;
 
-  document.getElementById('stat-games').textContent = total;
   document.getElementById('stat-wins').textContent = wins;
-  document.getElementById('stat-losses').textContent = losses;
-  const rateEl = document.getElementById('stat-rate');
-  rateEl.textContent = total > 0 ? `${rate}%` : '—';
-  rateEl.className = `stat-value ${rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low'}`;
 
   const historyEl = document.getElementById('history-list');
 
@@ -79,7 +71,7 @@ async function loadPlayer() {
       ? `<span class="badge badge-win">Win</span>`
       : `<span class="badge badge-loss">Loss</span>`;
     const teamBadge = `<span class="badge badge-${row.team}">${row.team} team</span>`;
-    const roleBadge = `<span class="badge" style="background:var(--surface);border:1px solid var(--border)">${row.role}</span>`;
+    const roleBadge = `<span class="badge" style="background:var(--surface2);border:1px solid var(--border)">${row.role}</span>`;
 
     const screenshotLink = g.screenshot_url
       ? `<a href="${escapeHtml(g.screenshot_url)}" target="_blank" rel="noopener" class="screenshot-link">View screenshot</a>`

@@ -15,7 +15,7 @@ async function init() {
   allProfiles = data ?? [];
 
   document.getElementById('loading').style.display = 'none';
-  document.getElementById('form-content').style.display = 'block';
+  document.getElementById('game-form').style.display = 'block';
 
   addPlayerRow();
   addPlayerRow();
@@ -29,6 +29,26 @@ async function init() {
       document.querySelectorAll('.team-option').forEach(b => b.classList.remove('selected'));
       btn.classList.add('selected');
     });
+  });
+
+  document.getElementById('screenshot-file').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    const display = document.getElementById('file-name-display');
+    const label = document.getElementById('file-upload-label');
+    const previewWrap = document.getElementById('screenshot-preview-wrap');
+    const preview = document.getElementById('screenshot-preview');
+
+    if (file) {
+      display.textContent = file.name;
+      label.classList.add('has-file');
+      const url = URL.createObjectURL(file);
+      preview.src = url;
+      previewWrap.style.display = 'block';
+    } else {
+      display.textContent = 'Click to upload screenshot';
+      label.classList.remove('has-file');
+      previewWrap.style.display = 'none';
+    }
   });
 }
 
@@ -61,6 +81,41 @@ function addPlayerRow() {
     if (document.querySelectorAll('.player-row').length > 1) row.remove();
   });
   container.appendChild(row);
+}
+
+function compressImage(file, maxPx = 1920, quality = 0.8) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onerror = () => reject(new Error('Could not read image file.'));
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxPx || height > maxPx) {
+        if (width >= height) { height = Math.round(height * maxPx / width); width = maxPx; }
+        else { width = Math.round(width * maxPx / height); height = maxPx; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Compression failed.')), 'image/jpeg', quality);
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function uploadScreenshot(file) {
+  const compressed = await compressImage(file);
+  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+
+  const { error } = await db.storage
+    .from('screenshots')
+    .upload(filename, compressed, { contentType: 'image/jpeg' });
+
+  if (error) throw new Error('Screenshot upload failed: ' + error.message);
+
+  const { data } = db.storage.from('screenshots').getPublicUrl(filename);
+  return data.publicUrl;
 }
 
 async function submitGame(e) {
@@ -102,22 +157,40 @@ async function submitGame(e) {
     return;
   }
 
-  const playedAt = document.getElementById('played-at').value;
-  const screenshotUrl = document.getElementById('screenshot-url').value.trim();
-  const notes = document.getElementById('notes').value.trim();
-
   const submitBtn = document.getElementById('submit-btn');
   submitBtn.disabled = true;
   submitBtn.textContent = 'Saving...';
+
+  let screenshotUrl = null;
+  const fileInput = document.getElementById('screenshot-file');
+
+  if (fileInput.files[0]) {
+    submitBtn.textContent = 'Uploading screenshot...';
+    try {
+      screenshotUrl = await uploadScreenshot(fileInput.files[0]);
+    } catch (err) {
+      showError(err.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log Game';
+      return;
+    }
+  }
+
+  submitBtn.textContent = 'Saving...';
+
+  const playedAt = document.getElementById('played-at').value;
+  const notes = document.getElementById('notes').value.trim();
+
+  const { data: { user } } = await db.auth.getUser();
 
   const { data: game, error: gameError } = await db
     .from('games')
     .insert({
       played_at: playedAt,
       winning_team: selectedTeam,
-      screenshot_url: screenshotUrl || null,
+      screenshot_url: screenshotUrl,
       notes: notes || null,
-      created_by: (await db.auth.getUser()).data.user.id,
+      created_by: user.id,
     })
     .select()
     .single();
@@ -153,6 +226,7 @@ function showError(msg) {
   const el = document.getElementById('error-msg');
   el.textContent = msg;
   el.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function clearError() {

@@ -8,7 +8,7 @@
 </head>
 <body>
   <nav class="nav">
-    <a href="index.html" class="nav-brand"><span>Codenames</span> Tracker</a>
+    <a href="index.html" class="nav-brand"><span class="red">Code</span><span class="blue">names</span>&nbsp;Tracker</a>
     <div class="nav-links" id="nav-links"></div>
   </nav>
 
@@ -17,26 +17,14 @@
 
     <h1 class="page-title" id="player-name">Loading...</h1>
 
-    <div class="stats-grid">
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(160px, 200px))">
       <div class="stat-card">
-        <div class="stat-value" id="stat-games">—</div>
-        <div class="stat-label">Games</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value win-rate-high" id="stat-wins">—</div>
+        <div class="stat-value green" id="stat-wins">—</div>
         <div class="stat-label">Wins</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value win-rate-low" id="stat-losses">—</div>
-        <div class="stat-label">Losses</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-rate">—</div>
-        <div class="stat-label">Win Rate</div>
       </div>
     </div>
 
-    <h2 style="font-size:1rem; font-weight:700; margin-bottom:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">Game History</h2>
+    <p class="section-heading">Game History</p>
     <div class="card">
       <div id="history-list">
         <div class="loading">Loading...</div>

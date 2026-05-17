@@ -1,3 +1,8 @@
+// Users only enter username + password. Email is derived internally so Supabase auth works.
+function toEmail(username) {
+  return `${username.toLowerCase()}@codenames-tracker.app`;
+}
+
 let activeTab = 'signin';
 
 async function init() {
@@ -25,17 +30,21 @@ function switchTab(tab) {
 async function handleSignIn(e) {
   e.preventDefault();
   clearMessages();
-  const email = document.getElementById('signin-email').value;
+
+  const username = document.getElementById('signin-username').value.trim();
   const password = document.getElementById('signin-password').value;
 
   const btn = document.getElementById('signin-btn');
   btn.disabled = true;
   btn.textContent = 'Signing in...';
 
-  const { error } = await db.auth.signInWithPassword({ email, password });
+  const { error } = await db.auth.signInWithPassword({
+    email: toEmail(username),
+    password,
+  });
 
   if (error) {
-    showError('signin-error', error.message);
+    showError('signin-error', 'Incorrect username or password.');
     btn.disabled = false;
     btn.textContent = 'Sign In';
     return;
@@ -48,9 +57,8 @@ async function handleSignUp(e) {
   e.preventDefault();
   clearMessages();
 
-  const email = document.getElementById('signup-email').value;
-  const password = document.getElementById('signup-password').value;
   const username = document.getElementById('signup-username').value.trim();
+  const password = document.getElementById('signup-password').value;
 
   if (username.length < 2 || username.length > 20) {
     showError('signup-error', 'Username must be 2–20 characters.');
@@ -69,7 +77,7 @@ async function handleSignUp(e) {
   const { data: existing } = await db
     .from('profiles')
     .select('id')
-    .eq('username', username)
+    .ilike('username', username)
     .maybeSingle();
 
   if (existing) {
@@ -79,7 +87,10 @@ async function handleSignUp(e) {
     return;
   }
 
-  const { data, error } = await db.auth.signUp({ email, password });
+  const { data, error } = await db.auth.signUp({
+    email: toEmail(username),
+    password,
+  });
 
   if (error) {
     showError('signup-error', error.message);

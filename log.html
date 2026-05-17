@@ -8,7 +8,7 @@
 </head>
 <body>
   <nav class="nav">
-    <a href="index.html" class="nav-brand"><span>Codenames</span> Tracker</a>
+    <a href="index.html" class="nav-brand"><span class="red">Code</span><span class="blue">names</span>&nbsp;Tracker</a>
     <div class="nav-links" id="nav-links"></div>
   </nav>
 
@@ -18,7 +18,7 @@
 
     <div id="loading" class="loading">Loading...</div>
 
-    <form id="game-form" style="display:none" id="form-content">
+    <form id="game-form" style="display:none">
       <div id="error-msg" class="alert alert-error" style="display:none"></div>
 
       <div class="form-group">
@@ -40,13 +40,24 @@
           <div id="player-rows"></div>
           <button type="button" class="add-player-btn" id="add-player">+ Add Player</button>
         </div>
-        <p class="form-hint">Add everyone who played. Won/lost is determined automatically by their team.</p>
+        <p class="form-hint">Add everyone who played. Won/lost is set automatically by their team.</p>
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="screenshot-url">Screenshot URL (optional)</label>
-        <input type="url" id="screenshot-url" class="form-input" placeholder="https://imgur.com/...">
-        <p class="form-hint">Upload your screenshot to Imgur, Discord, etc. and paste the link here.</p>
+        <label class="form-label">Screenshot (optional)</label>
+        <label class="file-upload-label" for="screenshot-file" id="file-upload-label">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:6px;display:block;margin-left:auto;margin-right:auto">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <span id="file-name-display">Click to upload screenshot</span>
+          <span class="file-hint">PNG, JPG, GIF up to 5MB</span>
+        </label>
+        <input type="file" id="screenshot-file" accept="image/*" style="display:none">
+        <div id="screenshot-preview-wrap" style="display:none; margin-top:10px">
+          <img id="screenshot-preview" style="max-width:100%; max-height:200px; border-radius:6px; border:1px solid var(--border)">
+        </div>
       </div>
 
       <div class="form-group">
@@ -54,7 +65,7 @@
         <textarea id="notes" class="form-textarea" placeholder="Anything worth remembering about this game..."></textarea>
       </div>
 
-      <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%; padding:12px">Log Game</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn" style="width:100%; padding:14px; font-size:1rem">Log Game</button>
     </form>
   </main>
 
@@ -63,7 +74,6 @@
   <script src="js/auth.js"></script>
   <script src="js/log.js"></script>
   <script>
-    // Set today's date as default
     document.addEventListener('DOMContentLoaded', () => {
       const input = document.getElementById('played-at');
       if (input) input.valueAsDate = new Date();
