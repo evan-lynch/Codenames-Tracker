@@ -313,6 +313,32 @@ async function loadGameHistory(userId) {
   }).join('');
 }
 
+// ── Clue Hall of Fame Preview ────────────────────
+
+async function loadClueHOF() {
+  const container = document.getElementById('clue-hof-preview');
+  if (!container) return;
+
+  const { data, error } = await db
+    .from('clues')
+    .select('id, screenshot_url, created_at, profiles(username)')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) {
+    container.innerHTML = `<div class="empty-state" style="padding:16px">No clues yet. <a href="clues.html" style="color:var(--orange)">Be the first to upload one.</a></div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <a href="${escapeHtml(data.screenshot_url)}" target="_blank" rel="noopener" class="clue-hof-preview-link">
+      <img src="${escapeHtml(data.screenshot_url)}" alt="Clue" class="clue-hof-img">
+    </a>
+    <div class="clue-hof-meta">By <strong>${escapeHtml(data.profiles?.username ?? '?')}</strong> · ${formatDateTime(data.created_at)}</div>
+  `;
+}
+
 // ── Init ─────────────────────────────────────────
 
 async function init() {
@@ -322,6 +348,7 @@ async function init() {
   await Promise.all([
     loadLeaderboard(profile, allPlays),
     loadGameHistory(user?.id),
+    loadClueHOF(),
   ]);
 }
 

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clue Hall of Fame — Codenames Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav-brand"><span class="red">Code</span><span class="blue">names</span>&nbsp;Tracker</a>
+    <div class="nav-links" id="nav-links"></div>
+  </nav>
+
+  <main class="container">
+    <a href="index.html" class="back-link">&#8592; Leaderboard</a>
+
+    <div class="clues-page-header">
+      <h1 class="page-title">Clue Hall of Fame</h1>
+      <button class="btn btn-primary" id="upload-btn" style="display:none">+ Upload Clue</button>
+    </div>
+
+    <div id="upload-form" class="clue-upload-form" style="display:none">
+      <label class="clue-upload-label" id="upload-label">
+        <span id="upload-label-text">Click to choose a screenshot</span>
+        <input type="file" id="clue-file" accept="image/*" style="display:none">
+      </label>
+      <div id="clue-preview-wrap" style="display:none">
+        <img id="clue-file-preview" alt="Preview" class="clue-upload-preview">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px">
+        <button class="btn btn-primary" id="submit-clue-btn" style="flex:1">Upload</button>
+        <button class="btn btn-ghost" id="cancel-upload-btn">Cancel</button>
+      </div>
+      <div id="upload-error" class="form-error" style="display:none"></div>
+    </div>
+
+    <div id="clues-grid" class="clues-grid">
+      <div class="loading">Loading...</div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/clues.js"></script>
+</body>
+</html>
