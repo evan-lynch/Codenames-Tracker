@@ -12,6 +12,13 @@ function localDateString() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
+function buildFingerprint(winningTeam, players) {
+  const sorted = [...players]
+    .sort((a, b) => a.player_id.localeCompare(b.player_id))
+    .map(p => `${p.player_id}:${p.team}:${p.role}`);
+  return [winningTeam, ...sorted].join('|');
+}
+
 async function hashFile(file) {
   const buffer = await file.arrayBuffer();
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
@@ -175,6 +182,18 @@ async function submitGame(e) {
     return;
   }
 
+  const fingerprint = buildFingerprint(selectedTeam, players);
+  const { data: dupGame } = await db
+    .from('games')
+    .select('id')
+    .eq('game_fingerprint', fingerprint)
+    .maybeSingle();
+
+  if (dupGame) {
+    showError('A game with these exact players, teams, and result has already been logged. If this is a different game, at least one player\'s role or team must differ.');
+    return;
+  }
+
   const submitBtn = document.getElementById('submit-btn');
   submitBtn.disabled = true;
 
@@ -227,6 +246,7 @@ async function submitGame(e) {
       winning_team: selectedTeam,
       screenshot_url: screenshotUrl,
       screenshot_hash: fileHash,
+      game_fingerprint: fingerprint,
       notes: notes || null,
       created_by: user.id,
     })

@@ -1,8 +1,17 @@
 function escapeHtml(str) {
   const d = document.createElement('div');
-  d.textContent = str;
+  d.textContent = str ?? '';
   return d.innerHTML;
 }
+
+function formatDateTime(isoStr) {
+  return new Date(isoStr).toLocaleString('en-US', {
+    month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit'
+  });
+}
+
+// ── Profile Sidebar ──────────────────────────────
 
 function renderProfileSidebar(profile, stats) {
   const sidebar = document.getElementById('profile-sidebar');
@@ -10,18 +19,16 @@ function renderProfileSidebar(profile, stats) {
 
   if (!profile) {
     sidebar.innerHTML = `
-      <div class="profile-card">
-        <p class="profile-guest-msg">Sign in to track your stats and log games</p>
-        <a href="login.html" class="btn btn-primary" style="width:100%; text-align:center; padding:12px">Sign In</a>
-      </div>
+      <p class="profile-guest-msg">Sign in to track your stats and log games</p>
+      <a href="login.html" class="btn btn-primary" style="width:100%;text-align:center;padding:12px;display:block">Sign In</a>
     `;
     return;
   }
 
-  const wins = stats?.wins ?? 0;
+  const wins   = stats?.wins ?? 0;
   const losses = stats?.losses ?? 0;
-  const games = stats?.games_played ?? 0;
-  const rate = games > 0 ? Math.round((wins / games) * 100) : null;
+  const games  = stats?.games_played ?? 0;
+  const rate   = games > 0 ? Math.round((wins / games) * 100) : null;
   const rateClass = rate === null ? '' : rate >= 60 ? 'color-green' : rate >= 45 ? 'color-orange' : 'color-red';
 
   sidebar.innerHTML = `
@@ -46,8 +53,10 @@ function renderProfileSidebar(profile, stats) {
   `;
 }
 
-async function loadLeaderboard() {
-  const { user, profile } = await initAuth();
+// ── Leaderboard ──────────────────────────────────
+
+async function loadLeaderboard(profile) {
+  const tbody = document.getElementById('leaderboard-body');
 
   const { data, error } = await db
     .from('leaderboard')
@@ -55,19 +64,13 @@ async function loadLeaderboard() {
     .order('wins', { ascending: false })
     .order('games_played', { ascending: false });
 
-  const myStats = profile && data
-    ? data.find(r => r.id === profile.id)
-    : null;
-
+  const myStats = profile && data ? data.find(r => r.id === profile.id) : null;
   renderProfileSidebar(profile, myStats);
-
-  const tbody = document.getElementById('leaderboard-body');
 
   if (error || !data) {
     tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Failed to load leaderboard.</td></tr>`;
     return;
   }
-
   if (data.length === 0) {
     tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No games logged yet. Be the first!</td></tr>`;
     return;
@@ -77,11 +80,8 @@ async function loadLeaderboard() {
     const rank = i + 1;
     const rankClass = rank <= 3 ? `rank-${rank}` : '';
     const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
-
     const rate = Number(row.win_rate);
     const rateClass = rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
-    const rateDisplay = row.games_played > 0 ? `${rate}%` : '—';
-
     const isMe = profile && row.id === profile.id;
 
     return `
@@ -90,10 +90,119 @@ async function loadLeaderboard() {
         <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
         <td class="wins-count">${row.wins}</td>
         <td class="stat">${row.losses}</td>
-        <td class="win-rate ${row.games_played > 0 ? rateClass : ''}">${rateDisplay}</td>
-      </tr>
-    `;
+        <td class="win-rate ${row.games_played > 0 ? rateClass : ''}">${row.games_played > 0 ? rate + '%' : '—'}</td>
+      </tr>`;
   }).join('');
 }
 
-loadLeaderboard();
+// ── Game History Panel ───────────────────────────
+
+async function deleteGameInline(gameId, screenshotUrl, cardEl) {
+  if (!confirm('Remove this game? This will update everyone\'s stats.')) return;
+  const btn = cardEl.querySelector('.btn-remove-game');
+  if (btn) { btn.disabled = true; btn.textContent = 'Removing...'; }
+
+  if (screenshotUrl) {
+    const parts = screenshotUrl.split('/screenshots/');
+    if (parts[1]) await db.storage.from('screenshots').remove([parts[1]]);
+  }
+
+  const { error } = await db.from('games').delete().eq('id', gameId);
+  if (error) {
+    alert('Failed to remove: ' + error.message);
+    if (btn) { btn.disabled = false; btn.textContent = 'Remove'; }
+    return;
+  }
+
+  cardEl.style.opacity = '0';
+  cardEl.style.transition = 'opacity 0.2s';
+  setTimeout(() => {
+    cardEl.remove();
+    const list = document.getElementById('game-history-list');
+    if (list && !list.querySelector('.history-game-card')) {
+      list.innerHTML = `<div class="empty-state">No games logged yet.</div>`;
+    }
+    // Reload leaderboard stats silently
+    loadLeaderboard(currentProfile);
+  }, 200);
+}
+
+async function loadGameHistory(userId) {
+  const container = document.getElementById('game-history-list');
+
+  const { data: games, error } = await db
+    .from('games')
+    .select(`
+      id, winning_team, screenshot_url, created_by, created_at,
+      game_players (
+        team, role, won,
+        profiles ( id, username )
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(30);
+
+  if (error || !games) {
+    container.innerHTML = `<div class="empty-state">Failed to load.</div>`;
+    return;
+  }
+  if (games.length === 0) {
+    container.innerHTML = `<div class="empty-state">No games logged yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = games.map(game => {
+    const isOwner = userId && game.created_by === userId;
+    const winBadge = game.winning_team === 'red'
+      ? `<span class="badge badge-red" style="font-size:0.6rem">Red Win</span>`
+      : `<span class="badge badge-blue" style="font-size:0.6rem">Blue Win</span>`;
+
+    const redPlayers  = game.game_players.filter(p => p.team === 'red');
+    const bluePlayers = game.game_players.filter(p => p.team === 'blue');
+
+    function compact(players) {
+      return players.map(p => {
+        const name = p.profiles?.username ?? '?';
+        const role = p.role === 'spymaster' ? 'SM' : 'Op';
+        const result = p.won ? 'W' : 'L';
+        return `<span class="history-compact-player ${p.won ? 'player-win' : 'player-loss'}">${escapeHtml(name)} <em>${role} · ${result}</em></span>`;
+      }).join('');
+    }
+
+    const ssLink = game.screenshot_url
+      ? `<a href="${escapeHtml(game.screenshot_url)}" target="_blank" rel="noopener" class="screenshot-link" style="font-size:0.7rem">Screenshot</a>`
+      : '';
+
+    const removeBtn = isOwner
+      ? `<button class="btn-remove-game" style="font-size:0.68rem;padding:3px 10px" onclick="deleteGameInline('${game.id}', ${game.screenshot_url ? `'${escapeHtml(game.screenshot_url)}'` : 'null'}, this.closest('.history-game-card'))">Remove</button>`
+      : '';
+
+    return `
+      <div class="history-game-card" data-id="${game.id}">
+        <div class="history-game-header">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="history-game-date">${formatDateTime(game.created_at)}</span>
+            ${winBadge}
+            ${ssLink}
+          </div>
+          ${removeBtn}
+        </div>
+        <div class="history-teams">
+          <div class="history-team history-team-red">${compact(redPlayers)}</div>
+          <div class="history-team history-team-blue">${compact(bluePlayers)}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── Init ─────────────────────────────────────────
+
+async function init() {
+  const { user, profile } = await initAuth();
+  await Promise.all([
+    loadLeaderboard(profile),
+    loadGameHistory(user?.id),
+  ]);
+}
+
+init();

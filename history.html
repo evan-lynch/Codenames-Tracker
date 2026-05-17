@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game History — Codenames Tracker</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="nav">
+    <a href="index.html" class="nav-brand"><span class="red">Code</span><span class="blue">names</span>&nbsp;Tracker</a>
+    <div class="nav-links" id="nav-links"></div>
+  </nav>
+
+  <main class="container">
+    <h1 class="page-title">Game History</h1>
+    <div id="history-container">
+      <div class="loading">Loading...</div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>
