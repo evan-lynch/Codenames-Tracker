@@ -8,8 +8,12 @@ let activeTab = 'signin';
 async function init() {
   const { data: { session } } = await db.auth.getSession();
   if (session) {
-    window.location.href = 'index.html';
-    return;
+    const { data: profile } = await db.from('profiles').select('id').eq('id', session.user.id).maybeSingle();
+    if (profile) {
+      window.location.href = 'index.html';
+      return;
+    }
+    await db.auth.signOut();
   }
 
   document.getElementById('tab-signin').addEventListener('click', () => switchTab('signin'));
