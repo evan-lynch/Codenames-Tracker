@@ -21,10 +21,16 @@
     <div class="main-content">
 
       <section class="leaderboard-panel">
-        <h1 class="page-title">Leaderboard</h1>
+        <div class="leaderboard-header">
+          <h1 class="page-title">Leaderboard</h1>
+          <div class="leaderboard-toggle">
+            <button class="toggle-btn active" id="toggle-players">Players</button>
+            <button class="toggle-btn" id="toggle-teams">Teams</button>
+          </div>
+        </div>
         <div class="card">
           <table class="table">
-            <thead>
+            <thead id="leaderboard-thead">
               <tr>
                 <th>#</th>
                 <th>Player</th>
@@ -42,10 +48,13 @@
 
       <div class="right-panels">
 
-        <section class="best-teams-panel">
-          <h2 class="panel-title">Teams</h2>
-          <div id="best-teams-list">
+        <section class="history-panel">
+          <h2 class="panel-title">Game History</h2>
+          <div id="game-history-list">
             <div class="loading">Loading...</div>
+          </div>
+          <div class="history-panel-footer">
+            <a href="history.html" class="btn btn-ghost history-view-all-btn">View All</a>
           </div>
         </section>
 
@@ -55,14 +64,7 @@
             <div class="loading">Loading...</div>
           </div>
           <div class="clue-hof-footer">
-            <a href="clues.html" class="btn btn-primary clue-hof-view-btn">View All</a>
-          </div>
-        </section>
-
-        <section class="history-panel">
-          <h2 class="panel-title">Game History</h2>
-          <div id="game-history-list">
-            <div class="loading">Loading...</div>
+            <a href="clues.html" class="btn btn-ghost clue-hof-view-btn">View All</a>
           </div>
         </section>
 

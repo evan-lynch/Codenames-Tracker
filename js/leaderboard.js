@@ -11,6 +11,12 @@ function formatDateTime(isoStr) {
   });
 }
 
+// ── Module state ─────────────────────────────────
+let cachedAllPlays = null;
+let cachedLeaderboardData = null;
+let cachedProfile = null;
+let activeLeaderboardTab = 'players';
+
 // ── Shared data fetch ────────────────────────────
 
 async function fetchAllPlays() {
@@ -61,7 +67,7 @@ function computeBestTeams(allPlays) {
     .filter(t => t.total >= 2)
     .map(t => ({ ...t, rate: Math.round(t.wins / t.total * 100) }))
     .sort((a, b) => b.rate - a.rate || b.wins - a.wins)
-    .slice(0, 20);
+    ;
 }
 
 function renderBestTeams(teams) {
@@ -156,14 +162,86 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
 
 // ── Leaderboard ──────────────────────────────────
 
-async function loadLeaderboard(profile, allPlays) {
+function renderPlayersTable(data, profile) {
+  document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Player</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
   const tbody = document.getElementById('leaderboard-body');
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No games logged yet. Be the first!</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map((row, i) => {
+    const rank = i + 1;
+    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+    const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
+    const rate = Number(row.win_rate);
+    const rateClass = rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
+    const isMe = profile && row.id === profile.id;
+    return `
+      <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
+        <td class="rank ${rankClass}">${rankLabel}</td>
+        <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
+        <td class="wins-count">${row.wins}</td>
+        <td class="losses-count">${row.losses}</td>
+        <td class="win-rate ${row.games_played > 0 ? rateClass : ''}">${row.games_played > 0 ? rate + '%' : '—'}</td>
+      </tr>`;
+  }).join('');
+}
+
+function renderTeamsTable(allPlays) {
+  document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Team</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
+  const tbody = document.getElementById('leaderboard-body');
+  const teams = computeBestTeams(allPlays);
+  if (teams.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Need 2+ games per team combo to appear here.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = teams.map((t, i) => {
+    const rank = i + 1;
+    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+    const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
+    const rateClass = t.rate >= 60 ? 'win-rate-high' : t.rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
+    return `
+      <tr>
+        <td class="rank ${rankClass}">${rankLabel}</td>
+        <td style="font-weight:600">${t.names.map(n => escapeHtml(n)).join(' &amp; ')}</td>
+        <td class="wins-count">${t.wins}</td>
+        <td class="losses-count">${t.total - t.wins}</td>
+        <td class="win-rate ${rateClass}">${t.rate}%</td>
+      </tr>`;
+  }).join('');
+}
+
+function setupLeaderboardToggle() {
+  const btnPlayers = document.getElementById('toggle-players');
+  const btnTeams = document.getElementById('toggle-teams');
+  if (!btnPlayers || !btnTeams) return;
+
+  btnPlayers.addEventListener('click', () => {
+    activeLeaderboardTab = 'players';
+    btnPlayers.classList.add('active');
+    btnTeams.classList.remove('active');
+    renderPlayersTable(cachedLeaderboardData, cachedProfile);
+  });
+
+  btnTeams.addEventListener('click', () => {
+    activeLeaderboardTab = 'teams';
+    btnTeams.classList.add('active');
+    btnPlayers.classList.remove('active');
+    renderTeamsTable(cachedAllPlays);
+  });
+}
+
+async function loadLeaderboard(profile, allPlays) {
+  cachedProfile = profile;
+  cachedAllPlays = allPlays;
 
   const { data, error } = await db
     .from('leaderboard')
     .select('*')
     .order('wins', { ascending: false })
     .order('games_played', { ascending: false });
+
+  cachedLeaderboardData = error ? null : data;
 
   const myStats = profile && data ? data.find(r => r.id === profile.id) : null;
 
@@ -182,32 +260,17 @@ async function loadLeaderboard(profile, allPlays) {
 
   renderProfileSidebar(profile, myStats, roleStats, bestTeammate);
 
-  if (error || !data) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Failed to load leaderboard.</td></tr>`;
-    return;
-  }
-  if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No games logged yet. Be the first!</td></tr>`;
+  if (error) {
+    document.getElementById('leaderboard-body').innerHTML =
+      `<tr><td colspan="5" class="empty-state">Failed to load leaderboard.</td></tr>`;
     return;
   }
 
-  tbody.innerHTML = data.map((row, i) => {
-    const rank = i + 1;
-    const rankClass = rank <= 3 ? `rank-${rank}` : '';
-    const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
-    const rate = Number(row.win_rate);
-    const rateClass = rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
-    const isMe = profile && row.id === profile.id;
-
-    return `
-      <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
-        <td class="rank ${rankClass}">${rankLabel}</td>
-        <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
-        <td class="wins-count">${row.wins}</td>
-        <td class="losses-count">${row.losses}</td>
-        <td class="win-rate ${row.games_played > 0 ? rateClass : ''}">${row.games_played > 0 ? rate + '%' : '—'}</td>
-      </tr>`;
-  }).join('');
+  if (activeLeaderboardTab === 'teams') {
+    renderTeamsTable(allPlays);
+  } else {
+    renderPlayersTable(data, profile);
+  }
 }
 
 // ── Game History Panel ───────────────────────────
@@ -238,7 +301,7 @@ async function deleteGameInline(gameId, screenshotUrl, cardEl) {
       list.innerHTML = `<div class="empty-state">No games logged yet.</div>`;
     }
     const plays = await fetchAllPlays();
-    renderBestTeams(computeBestTeams(plays));
+    cachedAllPlays = plays;
     loadLeaderboard(currentProfile, plays);
   }, 200);
 }
@@ -256,7 +319,7 @@ async function loadGameHistory(userId) {
       )
     `)
     .order('created_at', { ascending: false })
-    .limit(30);
+    .limit(3);
 
   if (error || !games) {
     container.innerHTML = `<div class="empty-state">Failed to load.</div>`;
@@ -344,7 +407,7 @@ async function loadClueHOF() {
 async function init() {
   const { user, profile } = await initAuth();
   const allPlays = await fetchAllPlays();
-  renderBestTeams(computeBestTeams(allPlays));
+  setupLeaderboardToggle();
   await Promise.all([
     loadLeaderboard(profile, allPlays),
     loadGameHistory(user?.id),
