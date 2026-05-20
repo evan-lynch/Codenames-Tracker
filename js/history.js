@@ -77,8 +77,14 @@ async function loadHistory() {
       ? `<span class="badge badge-red">Red Wins</span>`
       : `<span class="badge badge-blue">Blue Wins</span>`;
 
-    const redPlayers = game.game_players.filter(p => p.team === 'red');
-    const bluePlayers = game.game_players.filter(p => p.team === 'blue');
+    function sortByRole(players) {
+      return [...players].sort((a, b) => {
+        if (a.role === b.role) return 0;
+        return a.role === 'spymaster' ? 1 : -1;
+      });
+    }
+    const bluePlayers = sortByRole(game.game_players.filter(p => p.team === 'blue'));
+    const redPlayers  = sortByRole(game.game_players.filter(p => p.team === 'red'));
 
     function playerRow(p) {
       const name = p.profiles?.username ?? 'Unknown';
@@ -121,12 +127,12 @@ async function loadHistory() {
 
         <div class="game-card-teams">
           <div class="game-card-team">
-            <div class="team-label red-label">Red Team</div>
-            ${redPlayers.map(playerRow).join('')}
-          </div>
-          <div class="game-card-team">
             <div class="team-label blue-label">Blue Team</div>
             ${bluePlayers.map(playerRow).join('')}
+          </div>
+          <div class="game-card-team">
+            <div class="team-label red-label">Red Team</div>
+            ${redPlayers.map(playerRow).join('')}
           </div>
         </div>
 
