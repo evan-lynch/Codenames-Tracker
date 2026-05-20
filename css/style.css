@@ -24,14 +24,49 @@
 body {
   background-color: var(--bg);
   background-image:
-    linear-gradient(rgba(255,255,255,0.016) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.016) 1px, transparent 1px),
     radial-gradient(ellipse 65% 100% at 0% 50%, rgba(180,35,10,0.18) 0%, transparent 100%),
     radial-gradient(ellipse 65% 100% at 100% 50%, rgba(18,75,185,0.18) 0%, transparent 100%);
-  background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
+  background-size: 100% 100%, 100% 100%;
   color: var(--text);
   font-family: 'Barlow', system-ui, sans-serif;
   min-height: 100vh;
+  position: relative;
+  z-index: 0;
+}
+
+/* ── ANIMATED BACKGROUND GRID ─────────────────────── */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: bgGridWave 38s linear infinite;
+  z-index: -1;
+}
+
+/* Spotlight orbits clockwise around the viewport — linear timing = constant velocity, seamless loop */
+@keyframes bgGridWave {
+  0%   { mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%); }
+  12%  { mask-image: radial-gradient(ellipse 78% 68% at 77% 27%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 77% 27%, black 0%, rgba(0,0,0,0.12) 75%); }
+  25%  { mask-image: radial-gradient(ellipse 78% 68% at 85% 52%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 85% 52%, black 0%, rgba(0,0,0,0.12) 75%); }
+  37%  { mask-image: radial-gradient(ellipse 78% 68% at 73% 76%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 73% 76%, black 0%, rgba(0,0,0,0.12) 75%); }
+  50%  { mask-image: radial-gradient(ellipse 78% 68% at 50% 84%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 84%, black 0%, rgba(0,0,0,0.12) 75%); }
+  62%  { mask-image: radial-gradient(ellipse 78% 68% at 27% 76%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 27% 76%, black 0%, rgba(0,0,0,0.12) 75%); }
+  75%  { mask-image: radial-gradient(ellipse 78% 68% at 15% 52%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 15% 52%, black 0%, rgba(0,0,0,0.12) 75%); }
+  88%  { mask-image: radial-gradient(ellipse 78% 68% at 23% 27%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 23% 27%, black 0%, rgba(0,0,0,0.12) 75%); }
+  100% { mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%);
+         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%); }
 }
 
 /* ── NAV ─────────────────────────────────────────── */
@@ -39,6 +74,7 @@ body {
   background: rgba(14,13,18,0.92);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
   padding: 0 28px;
   height: 60px;
   display: flex;
@@ -51,16 +87,35 @@ body {
 
 .nav-brand {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.4rem;
+  font-size: 2.0rem;
   letter-spacing: 2px;
   color: var(--text);
   text-decoration: none;
-  text-shadow: 0 0 24px rgba(204,48,16,0.35);
   line-height: 1;
+  -webkit-text-stroke: 0.5px rgba(0,0,0,0.5);
+  text-shadow:
+    1px 2px 4px rgba(0,0,0,0.65);
 }
 
-.nav-brand .red { color: var(--red-bright); }
-.nav-brand .blue { color: var(--blue-bright); }
+.nav-brand .red {
+  color: var(--red-bright);
+  -webkit-text-stroke: 0.6px #6a1406;
+  text-shadow:
+    0 1px 0 #7a1808,
+    1px 2px 0 #4e0e04,
+    2px 4px 6px rgba(0,0,0,0.55),
+    0 0 18px rgba(224,56,24,0.4);
+}
+
+.nav-brand .blue {
+  color: var(--blue-bright);
+  -webkit-text-stroke: 0.6px #0a2860;
+  text-shadow:
+    0 1px 0 #0c3272,
+    1px 2px 0 #071d48,
+    2px 4px 6px rgba(0,0,0,0.55),
+    0 0 18px rgba(30,114,216,0.4);
+}
 
 .nav-links { display: flex; align-items: center; gap: 12px; }
 .nav-user { color: var(--text-muted); font-size: 0.875rem; }
@@ -77,12 +132,20 @@ body {
   cursor: pointer;
   border: none;
   text-decoration: none;
-  transition: opacity 0.15s, transform 0.1s;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
   text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
-.btn:hover { opacity: 0.85; }
-.btn:active { transform: scale(0.98); }
-.btn-primary { background: var(--orange); color: #0b0a0f; }
+.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.35); opacity: 1; }
+.btn:active { transform: scale(0.97); box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+.btn-primary {
+  background: var(--orange);
+  color: #0b0a0f;
+  box-shadow: 0 2px 8px rgba(230,184,74,0.22), 0 1px 3px rgba(0,0,0,0.3);
+}
+.btn-primary:hover {
+  box-shadow: 0 4px 18px rgba(230,184,74,0.35), 0 2px 6px rgba(0,0,0,0.3);
+}
 .btn-ghost {
   background: transparent;
   color: var(--text-muted);
@@ -201,6 +264,15 @@ body {
   font-size: 2.6rem;
   color: var(--text);
   margin: 0 auto 18px;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+.profile-avatar:hover {
+  border-color: var(--orange);
+  box-shadow: 0 4px 18px rgba(230,184,74,0.2), 0 2px 8px rgba(0,0,0,0.35);
+  transform: translateY(-2px);
 }
 
 .profile-username {
@@ -250,19 +322,20 @@ body {
   font-weight: 700;
 }
 
-.profile-log-btn {
-  width: 100%;
-  text-align: center;
-  padding: 14px;
-  font-size: 1rem;
-  margin-bottom: 10px;
-  display: block;
-}
-
 .profile-view-btn {
   width: 100%;
   text-align: center;
   padding: 10px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.profile-log-btn {
+  width: 100%;
+  text-align: center;
+  padding: 16px;
+  font-size: 1.05rem;
+  letter-spacing: 2px;
   display: block;
 }
 
@@ -282,6 +355,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
 }
 
 /* ── TABLE ───────────────────────────────────────── */
@@ -407,6 +481,7 @@ body {
   border-radius: var(--radius);
   padding: 20px;
   text-align: center;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
 
 .stat-card .stat-value {
@@ -431,10 +506,13 @@ body {
 }
 
 .stat-card .stat-sublabel {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
   margin-top: 4px;
-  opacity: 0.7;
+}
+
+#stat-best-mate {
+  margin-bottom: 10px;
 }
 
 /* Role stats in profile sidebar */
@@ -481,8 +559,6 @@ body {
 .game-item:last-child { border-bottom: none; }
 .game-item.win  { background: rgba(39,174,96,0.13); border-left: 3px solid var(--green); }
 .game-item.loss { background: rgba(204,48,16,0.13); border-left: 3px solid var(--red-bright); }
-.game-item.win:hover  { background: rgba(39,174,96,0.2); }
-.game-item.loss:hover { background: rgba(204,48,16,0.2); }
 
 .game-info { flex: 1; min-width: 0; }
 
@@ -708,6 +784,7 @@ body {
   width: 100%;
   max-width: 400px;
   backdrop-filter: blur(12px);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.3);
 }
 
 .auth-brand {
@@ -797,6 +874,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
 }
 
 .history-panel-footer {
@@ -927,6 +1005,7 @@ body {
   border-radius: var(--radius);
   padding: 20px 24px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
 }
 
 .game-card-header {
@@ -1037,6 +1116,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
 }
 
 .best-teams-panel .panel-title {
@@ -1089,6 +1169,7 @@ body {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.3);
 }
 
 .clue-hof-panel .panel-title {
@@ -1216,6 +1297,52 @@ body {
   gap: 2px;
   margin-top: 4px;
 }
+
+/* ── STREAK FIRE ─────────────────────────────────── */
+.streak-fire {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  cursor: default;
+  vertical-align: middle;
+}
+.flame-img {
+  display: block;
+  width: 20px;
+  height: 24px;
+}
+
+.streak-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1008;
+  border: 1.5px solid var(--orange);
+  color: var(--orange);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 0 12px rgba(230,150,0,0.15);
+}
+.streak-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--orange);
+}
+.streak-fire:hover .streak-tooltip { opacity: 1; }
 
 /* ── RESPONSIVE ──────────────────────────────────── */
 @media (max-width: 1100px) {

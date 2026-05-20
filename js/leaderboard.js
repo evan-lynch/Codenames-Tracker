@@ -11,6 +11,11 @@ function formatDateTime(isoStr) {
   });
 }
 
+function flameHtml(streak) {
+  if (streak < 3) return '';
+  return `<span class="streak-fire"><img src="images/fire.svg" class="flame-img" alt=""><span class="streak-tooltip">${streak} WIN STREAK</span></span>`;
+}
+
 function winRateColor(rate) {
   return `hsl(${Math.round(rate * 1.2)}, 65%, 55%)`;
 }
@@ -19,6 +24,7 @@ function winRateColor(rate) {
 let cachedAllPlays = null;
 let cachedLeaderboardData = null;
 let cachedProfile = null;
+let cachedStreaks = {};
 let activeLeaderboardTab = 'players';
 
 // ── Shared data fetch ────────────────────────────
@@ -26,8 +32,29 @@ let activeLeaderboardTab = 'players';
 async function fetchAllPlays() {
   const { data } = await db
     .from('game_players')
-    .select('game_id, player_id, team, role, won, profiles(id, username)');
+    .select('game_id, player_id, team, role, won, profiles(id, username), games(created_at)');
   return data ?? [];
+}
+
+function computeStreaks(allPlays) {
+  const playerPlays = {};
+  for (const p of allPlays) {
+    if (!playerPlays[p.player_id]) playerPlays[p.player_id] = [];
+    playerPlays[p.player_id].push(p);
+  }
+  const streaks = {};
+  for (const [playerId, plays] of Object.entries(playerPlays)) {
+    const sorted = [...plays].sort((a, b) =>
+      new Date(b.games?.created_at ?? 0) - new Date(a.games?.created_at ?? 0)
+    );
+    let streak = 0;
+    for (const p of sorted) {
+      if (p.won) streak++;
+      else break;
+    }
+    streaks[playerId] = streak;
+  }
+  return streaks;
 }
 
 function computeBestTeammate(allPlays, myId) {
@@ -97,7 +124,7 @@ function renderBestTeams(teams) {
 function roleRateHtml(wins, total) {
   if (total === 0) return '—';
   const pct = Math.round(wins / total * 100);
-  return `<span style="color:${winRateColor(pct)}">${pct}%</span> <span style="font-size:0.65rem;color:var(--text-muted)">${wins}/${total}</span>`;
+  return `<span style="color:${winRateColor(pct)}">${pct}%</span>`;
 }
 
 function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
@@ -124,7 +151,7 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
   const opTotal = roleStats?.opTotal ?? 0;
 
   sidebar.innerHTML = `
-    <div class="profile-avatar">${escapeHtml(profile.username.charAt(0).toUpperCase())}</div>
+    <a href="player.html?id=${profile.id}" class="profile-avatar">${escapeHtml(profile.username.charAt(0).toUpperCase())}</a>
     <div class="profile-username">${escapeHtml(profile.username)}</div>
     <div class="profile-stats">
       <div class="profile-stat">
@@ -150,22 +177,14 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
         <div class="profile-role-value">${roleRateHtml(opWins, opTotal)}</div>
       </div>
     </div>
-    ${bestTeammate ? `
-    <div class="profile-best-mate">
-      <div class="profile-role-label">Best Teammate</div>
-      <div class="profile-role-value">
-        <a href="player.html?id=${bestTeammate.id}" style="text-decoration:none;font-weight:700;color:var(--blue-bright)">${escapeHtml(bestTeammate.name)}</a>
-        <span style="font-size:0.65rem;color:var(--text-muted)">${bestTeammate.rate}% · ${bestTeammate.wins}/${bestTeammate.total}</span>
-      </div>
-    </div>` : ''}
-    <a href="log.html" class="btn btn-primary profile-log-btn">+ Log Game</a>
     <a href="player.html?id=${profile.id}" class="btn btn-ghost profile-view-btn">View My Profile</a>
+    <a href="log.html" class="btn btn-primary profile-log-btn">+ Log Game</a>
   `;
 }
 
 // ── Leaderboard ──────────────────────────────────
 
-function renderPlayersTable(data, profile) {
+function renderPlayersTable(data, profile, streaks = {}) {
   document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Player</th><th>Points</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
   const tbody = document.getElementById('leaderboard-body');
   if (!data || data.length === 0) {
@@ -173,7 +192,7 @@ function renderPlayersTable(data, profile) {
     return;
   }
   const sorted = [...data]
-    .map(r => ({ ...r, elo: Math.max(0, r.wins - r.losses) }))
+    .map(r => ({ ...r, elo: r.wins - r.losses }))
     .sort((a, b) => b.elo - a.elo || b.wins - a.wins);
 
   tbody.innerHTML = sorted.map((row, i) => {
@@ -181,13 +200,14 @@ function renderPlayersTable(data, profile) {
     const rankClass = rank <= 3 ? `rank-${rank}` : '';
     const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
     const isMe = profile && row.id === profile.id;
-    const eloClass = row.elo > 0 ? 'color-green' : 'color-red';
+    const eloClass = row.elo > 0 ? 'color-green' : row.elo < 0 ? 'color-red' : '';
     const rate = Number(row.win_rate);
+    const streak = streaks[row.id] ?? 0;
     return `
       <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
         <td class="rank ${rankClass}">${rankLabel}</td>
         <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
-        <td class="elo-score ${eloClass}">${row.elo}</td>
+        <td class="elo-score ${eloClass}" style="white-space:nowrap">${row.elo}${flameHtml(streak)}</td>
         <td class="wins-count">${row.wins}</td>
         <td class="losses-count">${row.losses}</td>
         <td class="win-rate" ${row.games_played > 0 ? `style="color:${winRateColor(rate)}"` : ''}>${row.games_played > 0 ? rate + '%' : '—'}</td>
@@ -199,7 +219,7 @@ function renderTeamsTable(allPlays) {
   document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Team</th><th>Points</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
   const tbody = document.getElementById('leaderboard-body');
   const teams = computeBestTeams(allPlays)
-    .map(t => ({ ...t, losses: t.total - t.wins, elo: Math.max(0, t.wins - (t.total - t.wins)) }))
+    .map(t => ({ ...t, losses: t.total - t.wins, elo: t.wins - (t.total - t.wins) }))
     .sort((a, b) => b.elo - a.elo || b.wins - a.wins);
 
   if (teams.length === 0) {
@@ -210,7 +230,7 @@ function renderTeamsTable(allPlays) {
     const rank = i + 1;
     const rankClass = rank <= 3 ? `rank-${rank}` : '';
     const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
-    const eloClass = t.elo > 0 ? 'color-green' : 'color-red';
+    const eloClass = t.elo > 0 ? 'color-green' : t.elo < 0 ? 'color-red' : '';
     return `
       <tr>
         <td class="rank ${rankClass}">${rankLabel}</td>
@@ -237,7 +257,7 @@ function renderRoleTable(allPlays, role) {
   }
 
   const rows = Object.values(playerMap)
-    .map(r => ({ ...r, total: r.wins + r.losses, elo: Math.max(0, r.wins - r.losses) }))
+    .map(r => ({ ...r, total: r.wins + r.losses, elo: r.wins - r.losses }))
     .sort((a, b) => b.elo - a.elo || b.wins - a.wins);
 
   if (rows.length === 0) {
@@ -250,7 +270,7 @@ function renderRoleTable(allPlays, role) {
     const rankClass = rank <= 3 ? `rank-${rank}` : '';
     const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
     const isMe = cachedProfile && row.id === cachedProfile.id;
-    const eloClass = row.elo > 0 ? 'color-green' : 'color-red';
+    const eloClass = row.elo > 0 ? 'color-green' : row.elo < 0 ? 'color-red' : '';
     const rate = row.total > 0 ? Math.round(row.wins / row.total * 100) : 0;
     return `
       <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
@@ -278,7 +298,7 @@ function setupLeaderboardToggle() {
     activeLeaderboardTab = key;
     btns.forEach(b => b.classList.remove('active'));
     document.getElementById(`toggle-${key}`)?.classList.add('active');
-    if (key === 'players')   renderPlayersTable(cachedLeaderboardData, cachedProfile);
+    if (key === 'players')   renderPlayersTable(cachedLeaderboardData, cachedProfile, cachedStreaks);
     else if (key === 'teams') renderTeamsTable(cachedAllPlays);
     else                      renderRoleTable(cachedAllPlays, key);
   }
@@ -291,6 +311,7 @@ function setupLeaderboardToggle() {
 async function loadLeaderboard(profile, allPlays) {
   cachedProfile = profile;
   cachedAllPlays = allPlays;
+  cachedStreaks = computeStreaks(allPlays);
 
   const { data, error } = await db
     .from('leaderboard')
@@ -325,8 +346,10 @@ async function loadLeaderboard(profile, allPlays) {
 
   if (activeLeaderboardTab === 'teams') {
     renderTeamsTable(allPlays);
+  } else if (activeLeaderboardTab === 'players') {
+    renderPlayersTable(data, profile, cachedStreaks);
   } else {
-    renderPlayersTable(data, profile);
+    renderRoleTable(allPlays, activeLeaderboardTab);
   }
 }
 

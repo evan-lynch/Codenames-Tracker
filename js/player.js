@@ -135,6 +135,17 @@ async function loadPlayer() {
     }
   }
 
+  // Best streak (highest consecutive wins, oldest-first traversal)
+  let bestStreak = 0, currentStreak = 0;
+  for (let i = games.length - 1; i >= 0; i--) {
+    if (games[i].won) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+    else currentStreak = 0;
+  }
+  const bestStreakEl = document.getElementById('stat-best-streak');
+  if (bestStreakEl) {
+    bestStreakEl.textContent = total > 0 ? bestStreak : '—';
+  }
+
   const historyEl = document.getElementById('history-list');
 
   if (games.length === 0) {
