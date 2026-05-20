@@ -85,8 +85,8 @@ function addPlayerRow() {
     </select>
     <select class="form-select role-select">
       <option value="">Role</option>
-      <option value="spymaster">Spymaster</option>
       <option value="operative">Operative</option>
+      <option value="spymaster">Spymaster</option>
     </select>
     <button type="button" class="remove-player" title="Remove">&#x2715;</button>
   `;

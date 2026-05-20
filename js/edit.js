@@ -74,8 +74,8 @@ function addPlayerRow(playerId = '', team = '', role = '') {
     </select>
     <select class="form-select role-select">
       <option value="">Role</option>
-      <option value="spymaster" ${role === 'spymaster' ? 'selected' : ''}>Spymaster</option>
       <option value="operative" ${role === 'operative' ? 'selected' : ''}>Operative</option>
+      <option value="spymaster" ${role === 'spymaster' ? 'selected' : ''}>Spymaster</option>
     </select>
     <button type="button" class="remove-player" title="Remove">&#x2715;</button>
   `;
