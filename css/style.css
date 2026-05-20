@@ -1316,6 +1316,12 @@ body {
   display: block;
   width: 20px;
   height: 24px;
+  filter: drop-shadow(0 0 2px rgba(255,100,0,0.45)) drop-shadow(0 0 5px rgba(255,60,0,0.22));
+  animation: flameGlow 1.6s ease-in-out infinite alternate;
+}
+@keyframes flameGlow {
+  from { filter: drop-shadow(0 0 2px rgba(255,100,0,0.35)) drop-shadow(0 0 4px rgba(255,50,0,0.18)); }
+  to   { filter: drop-shadow(0 0 3px rgba(255,130,0,0.55)) drop-shadow(0 0 7px rgba(255,70,0,0.28)); }
 }
 
 .streak-tooltip {
