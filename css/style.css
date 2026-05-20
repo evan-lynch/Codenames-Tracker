@@ -35,38 +35,43 @@ body {
 }
 
 /* ── ANIMATED BACKGROUND GRID ─────────────────────── */
+/* @property lets the browser interpolate the spotlight position as plain numbers */
+@property --grid-x {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 50%;
+}
+@property --grid-y {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 17%;
+}
+
 .bg-grid {
   position: fixed;
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    linear-gradient(rgba(255,255,255,0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.055) 1px, transparent 1px);
   background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 78% 68% at var(--grid-x) var(--grid-y), black 0%, rgba(0,0,0,0.13) 75%);
+  -webkit-mask-image: radial-gradient(ellipse 78% 68% at var(--grid-x) var(--grid-y), black 0%, rgba(0,0,0,0.13) 75%);
   animation: bgGridWave 38s linear infinite;
   z-index: -1;
 }
 
-/* Spotlight orbits clockwise around the viewport — linear timing = constant velocity, seamless loop */
+/* Spotlight orbits clockwise — only coordinates change, gradient structure is constant */
 @keyframes bgGridWave {
-  0%   { mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%); }
-  12%  { mask-image: radial-gradient(ellipse 78% 68% at 77% 27%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 77% 27%, black 0%, rgba(0,0,0,0.12) 75%); }
-  25%  { mask-image: radial-gradient(ellipse 78% 68% at 85% 52%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 85% 52%, black 0%, rgba(0,0,0,0.12) 75%); }
-  37%  { mask-image: radial-gradient(ellipse 78% 68% at 73% 76%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 73% 76%, black 0%, rgba(0,0,0,0.12) 75%); }
-  50%  { mask-image: radial-gradient(ellipse 78% 68% at 50% 84%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 84%, black 0%, rgba(0,0,0,0.12) 75%); }
-  62%  { mask-image: radial-gradient(ellipse 78% 68% at 27% 76%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 27% 76%, black 0%, rgba(0,0,0,0.12) 75%); }
-  75%  { mask-image: radial-gradient(ellipse 78% 68% at 15% 52%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 15% 52%, black 0%, rgba(0,0,0,0.12) 75%); }
-  88%  { mask-image: radial-gradient(ellipse 78% 68% at 23% 27%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 23% 27%, black 0%, rgba(0,0,0,0.12) 75%); }
-  100% { mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%);
-         -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 17%, black 0%, rgba(0,0,0,0.12) 75%); }
+  0%   { --grid-x: 50%; --grid-y: 17%; }
+  12%  { --grid-x: 77%; --grid-y: 27%; }
+  25%  { --grid-x: 85%; --grid-y: 52%; }
+  37%  { --grid-x: 73%; --grid-y: 76%; }
+  50%  { --grid-x: 50%; --grid-y: 84%; }
+  62%  { --grid-x: 27%; --grid-y: 76%; }
+  75%  { --grid-x: 15%; --grid-y: 52%; }
+  88%  { --grid-x: 23%; --grid-y: 27%; }
+  100% { --grid-x: 50%; --grid-y: 17%; }
 }
 
 /* ── NAV ─────────────────────────────────────────── */
