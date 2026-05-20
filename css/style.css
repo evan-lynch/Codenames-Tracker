@@ -563,21 +563,49 @@ body {
 .form-hint { font-size: 0.76rem; color: var(--text-muted); margin-top: 5px; }
 
 /* ── PLAYER ROWS (log form) ──────────────────────── */
-.players-section {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px;
+.game-layout {
+  display: flex;
+  gap: 12px;
 }
 
-.player-row {
-  display: grid;
-  grid-template-columns: 1fr 100px 120px auto;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
+.team-column {
+  flex: 1;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
 }
-.player-row:last-child { margin-bottom: 0; }
+
+.team-column-header {
+  padding: 10px 14px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  text-align: center;
+}
+.team-column-header.blue-header { background: var(--blue-bright); color: #fff; }
+.team-column-header.red-header  { background: var(--red-bright);  color: #fff; }
+
+.role-section {
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+}
+
+.role-section-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.role-player-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.role-player-row .player-select { flex: 1; }
 
 .remove-player {
   background: none;
@@ -587,26 +615,26 @@ body {
   font-size: 1rem;
   padding: 4px 8px;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 .remove-player:hover { background: var(--red-dim); }
 
-.add-player-btn {
-  margin-top: 12px;
+.add-role-player {
   width: 100%;
   background: none;
   border: 1px dashed var(--border);
   border-radius: var(--radius);
   color: var(--text-muted);
-  padding: 10px;
+  padding: 6px;
   cursor: pointer;
   font-family: 'Barlow', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   transition: all 0.15s;
 }
-.add-player-btn:hover { border-color: var(--orange); color: var(--orange); }
+.add-role-player:hover { border-color: var(--orange); color: var(--orange); }
 
 /* ── WINNING TEAM SELECTOR ───────────────────────── */
 .team-selector { display: flex; gap: 12px; }
@@ -1210,10 +1238,6 @@ body {
 }
 
 @media (max-width: 600px) {
-  .player-row {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-  }
-  .player-row .remove-player { grid-column: 2; grid-row: 1; justify-self: end; }
+  .game-layout { flex-direction: column; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
 }

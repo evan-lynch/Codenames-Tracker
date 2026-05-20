@@ -29,12 +29,16 @@ async function init() {
   document.getElementById('loading').style.display = 'none';
   document.getElementById('game-form').style.display = 'block';
 
-  addPlayerRow();
-  addPlayerRow();
-  addPlayerRow();
-  addPlayerRow();
+  addToSection('blue', 'operative');
+  addToSection('blue', 'operative');
+  addToSection('blue', 'spymaster');
+  addToSection('red', 'operative');
+  addToSection('red', 'operative');
+  addToSection('red', 'spymaster');
 
-  document.getElementById('add-player').addEventListener('click', addPlayerRow);
+  document.querySelectorAll('.add-role-player').forEach(btn => {
+    btn.addEventListener('click', () => addToSection(btn.dataset.team, btn.dataset.role));
+  });
   document.getElementById('game-form').addEventListener('submit', submitGame);
 
   document.querySelectorAll('.team-option').forEach(btn => {
@@ -72,28 +76,17 @@ function buildPlayerSelect() {
   return `<option value="">— Player —</option>${options}`;
 }
 
-function addPlayerRow() {
-  const container = document.getElementById('player-rows');
+function addToSection(team, role) {
+  const suffix = role === 'operative' ? 'op' : 'sm';
+  const list = document.getElementById(`${team}-${suffix}-list`);
   const row = document.createElement('div');
-  row.className = 'player-row';
+  row.className = 'role-player-row';
   row.innerHTML = `
-    <select class="form-select player-select">${buildPlayerSelect()}</select>
-    <select class="form-select team-select">
-      <option value="">Team</option>
-      <option value="blue">Blue</option>
-      <option value="red">Red</option>
-    </select>
-    <select class="form-select role-select">
-      <option value="">Role</option>
-      <option value="operative">Operative</option>
-      <option value="spymaster">Spymaster</option>
-    </select>
+    <select class="form-select player-select" data-team="${team}" data-role="${role}">${buildPlayerSelect()}</select>
     <button type="button" class="remove-player" title="Remove">&#x2715;</button>
   `;
-  row.querySelector('.remove-player').addEventListener('click', () => {
-    if (document.querySelectorAll('.player-row').length > 1) row.remove();
-  });
-  container.appendChild(row);
+  row.querySelector('.remove-player').addEventListener('click', () => row.remove());
+  list.appendChild(row);
 }
 
 function compressImage(file, maxPx = 1920, quality = 0.8) {
@@ -140,24 +133,12 @@ async function submitGame(e) {
     return;
   }
 
-  const rows = document.querySelectorAll('.player-row');
   const players = [];
-  let valid = true;
-
-  rows.forEach(row => {
-    const playerId = row.querySelector('.player-select').value;
-    const team = row.querySelector('.team-select').value;
-    const role = row.querySelector('.role-select').value;
-    if (playerId || team || role) {
-      if (!playerId || !team || !role) { valid = false; return; }
-      players.push({ player_id: playerId, team, role });
+  document.querySelectorAll('.role-player-row .player-select').forEach(sel => {
+    if (sel.value) {
+      players.push({ player_id: sel.value, team: sel.dataset.team, role: sel.dataset.role });
     }
   });
-
-  if (!valid) {
-    showError('Each player row must have a player, team, and role selected.');
-    return;
-  }
 
   if (players.length === 0) {
     showError('Add at least one player.');
