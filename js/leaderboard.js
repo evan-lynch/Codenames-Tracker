@@ -222,23 +222,69 @@ function renderTeamsTable(allPlays) {
   }).join('');
 }
 
+function renderRoleTable(allPlays, role) {
+  document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Player</th><th>Points</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
+  const tbody = document.getElementById('leaderboard-body');
+
+  const playerMap = {};
+  for (const p of allPlays) {
+    if (p.role !== role) continue;
+    const id = p.player_id;
+    if (!playerMap[id]) playerMap[id] = { id, name: p.profiles?.username ?? '?', wins: 0, losses: 0 };
+    if (p.won) playerMap[id].wins++;
+    else playerMap[id].losses++;
+  }
+
+  const rows = Object.values(playerMap)
+    .map(r => ({ ...r, total: r.wins + r.losses, elo: Math.max(0, r.wins - r.losses) }))
+    .sort((a, b) => b.elo - a.elo || b.wins - a.wins);
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No games logged yet.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map((row, i) => {
+    const rank = i + 1;
+    const rankClass = rank <= 3 ? `rank-${rank}` : '';
+    const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
+    const isMe = cachedProfile && row.id === cachedProfile.id;
+    const eloClass = row.elo > 0 ? 'color-green' : 'color-red';
+    const rate = row.total > 0 ? Math.round(row.wins / row.total * 100) : 0;
+    const rateClass = rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
+    return `
+      <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
+        <td class="rank ${rankClass}">${rankLabel}</td>
+        <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.name)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
+        <td class="elo-score ${eloClass}">${row.elo}</td>
+        <td class="wins-count">${row.wins}</td>
+        <td class="losses-count">${row.losses}</td>
+        <td class="win-rate ${row.total > 0 ? rateClass : ''}">${row.total > 0 ? rate + '%' : '—'}</td>
+      </tr>`;
+  }).join('');
+}
+
 function setupLeaderboardToggle() {
-  const btnPlayers = document.getElementById('toggle-players');
-  const btnTeams = document.getElementById('toggle-teams');
-  if (!btnPlayers || !btnTeams) return;
+  const tabs = [
+    { id: 'toggle-players',   key: 'players' },
+    { id: 'toggle-teams',     key: 'teams' },
+    { id: 'toggle-spymaster', key: 'spymaster' },
+    { id: 'toggle-operative', key: 'operative' },
+  ];
 
-  btnPlayers.addEventListener('click', () => {
-    activeLeaderboardTab = 'players';
-    btnPlayers.classList.add('active');
-    btnTeams.classList.remove('active');
-    renderPlayersTable(cachedLeaderboardData, cachedProfile);
-  });
+  const btns = tabs.map(t => document.getElementById(t.id)).filter(Boolean);
 
-  btnTeams.addEventListener('click', () => {
-    activeLeaderboardTab = 'teams';
-    btnTeams.classList.add('active');
-    btnPlayers.classList.remove('active');
-    renderTeamsTable(cachedAllPlays);
+  function activate(key) {
+    activeLeaderboardTab = key;
+    btns.forEach(b => b.classList.remove('active'));
+    document.getElementById(`toggle-${key}`)?.classList.add('active');
+    if (key === 'players')   renderPlayersTable(cachedLeaderboardData, cachedProfile);
+    else if (key === 'teams') renderTeamsTable(cachedAllPlays);
+    else                      renderRoleTable(cachedAllPlays, key);
+  }
+
+  tabs.forEach(t => {
+    document.getElementById(t.id)?.addEventListener('click', () => activate(t.key));
   });
 }
 
