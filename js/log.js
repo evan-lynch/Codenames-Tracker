@@ -80,8 +80,8 @@ function addPlayerRow() {
     <select class="form-select player-select">${buildPlayerSelect()}</select>
     <select class="form-select team-select">
       <option value="">Team</option>
-      <option value="red">Red</option>
       <option value="blue">Blue</option>
+      <option value="red">Red</option>
     </select>
     <select class="form-select role-select">
       <option value="">Role</option>

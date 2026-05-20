@@ -69,8 +69,8 @@ function addPlayerRow(playerId = '', team = '', role = '') {
     <select class="form-select player-select">${buildPlayerSelect(playerId)}</select>
     <select class="form-select team-select">
       <option value="">Team</option>
-      <option value="red" ${team === 'red' ? 'selected' : ''}>Red</option>
       <option value="blue" ${team === 'blue' ? 'selected' : ''}>Blue</option>
+      <option value="red" ${team === 'red' ? 'selected' : ''}>Red</option>
     </select>
     <select class="form-select role-select">
       <option value="">Role</option>
