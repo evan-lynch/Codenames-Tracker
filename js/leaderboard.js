@@ -163,23 +163,29 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
 // ── Leaderboard ──────────────────────────────────
 
 function renderPlayersTable(data, profile) {
-  document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Player</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
+  document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Player</th><th>Points</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
   const tbody = document.getElementById('leaderboard-body');
   if (!data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No games logged yet. Be the first!</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No games logged yet. Be the first!</td></tr>`;
     return;
   }
-  tbody.innerHTML = data.map((row, i) => {
+  const sorted = [...data]
+    .map(r => ({ ...r, elo: Math.max(0, r.wins - r.losses) }))
+    .sort((a, b) => b.elo - a.elo || b.wins - a.wins);
+
+  tbody.innerHTML = sorted.map((row, i) => {
     const rank = i + 1;
     const rankClass = rank <= 3 ? `rank-${rank}` : '';
     const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
+    const isMe = profile && row.id === profile.id;
+    const eloClass = row.elo > 0 ? 'color-green' : 'color-red';
     const rate = Number(row.win_rate);
     const rateClass = rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
-    const isMe = profile && row.id === profile.id;
     return `
       <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
         <td class="rank ${rankClass}">${rankLabel}</td>
         <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
+        <td class="elo-score ${eloClass}">${row.elo}</td>
         <td class="wins-count">${row.wins}</td>
         <td class="losses-count">${row.losses}</td>
         <td class="win-rate ${row.games_played > 0 ? rateClass : ''}">${row.games_played > 0 ? rate + '%' : '—'}</td>
@@ -188,25 +194,30 @@ function renderPlayersTable(data, profile) {
 }
 
 function renderTeamsTable(allPlays) {
-  document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Team</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
+  document.getElementById('leaderboard-thead').innerHTML = `<tr><th>#</th><th>Team</th><th>Points</th><th>Wins</th><th>Losses</th><th>Win Rate</th></tr>`;
   const tbody = document.getElementById('leaderboard-body');
-  const teams = computeBestTeams(allPlays);
+  const teams = computeBestTeams(allPlays)
+    .map(t => ({ ...t, losses: t.total - t.wins, elo: Math.max(0, t.wins - (t.total - t.wins)) }))
+    .sort((a, b) => b.elo - a.elo || b.wins - a.wins);
+
   if (teams.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">Need 2+ games per team combo to appear here.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-state">Need 2+ games per team combo to appear here.</td></tr>`;
     return;
   }
   tbody.innerHTML = teams.map((t, i) => {
     const rank = i + 1;
     const rankClass = rank <= 3 ? `rank-${rank}` : '';
     const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
+    const eloClass = t.elo > 0 ? 'color-green' : 'color-red';
     const rateClass = t.rate >= 60 ? 'win-rate-high' : t.rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
     return `
       <tr>
         <td class="rank ${rankClass}">${rankLabel}</td>
         <td style="font-weight:600">${t.names.map(n => escapeHtml(n)).join(' &amp; ')}</td>
+        <td class="elo-score ${eloClass}">${t.elo}</td>
         <td class="wins-count">${t.wins}</td>
-        <td class="losses-count">${t.total - t.wins}</td>
-        <td class="win-rate ${rateClass}">${t.rate}%</td>
+        <td class="losses-count">${t.losses}</td>
+        <td class="win-rate ${t.total > 0 ? rateClass : ''}">${t.total > 0 ? t.rate + '%' : '—'}</td>
       </tr>`;
   }).join('');
 }
