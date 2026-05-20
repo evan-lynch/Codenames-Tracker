@@ -1,3 +1,7 @@
+function winRateColor(rate) {
+  return `hsl(${Math.round(rate * 1.2)}, 65%, 55%)`;
+}
+
 function escapeHtml(str) {
   const d = document.createElement('div');
   d.textContent = str ?? '';
@@ -72,7 +76,8 @@ async function loadPlayer() {
   const rateEl = document.getElementById('stat-rate');
   if (rate !== null) {
     rateEl.textContent = `${rate}%`;
-    rateEl.className = `stat-value ${rate >= 60 ? 'color-green' : rate >= 45 ? 'color-orange' : 'color-red'}`;
+    rateEl.className = 'stat-value';
+    rateEl.style.color = winRateColor(rate);
   } else {
     rateEl.textContent = '—';
   }
@@ -83,7 +88,8 @@ async function loadPlayer() {
     if (total === 0) { el.textContent = '—'; return; }
     const pct = Math.round(wins / total * 100);
     el.textContent = `${pct}%`;
-    el.className = `stat-value ${pct >= 60 ? 'color-green' : pct >= 45 ? 'color-orange' : 'color-red'}`;
+    el.className = 'stat-value';
+    el.style.color = winRateColor(pct);
     const sub = el.nextElementSibling?.nextElementSibling;
     if (sub) sub.textContent = `${wins}W / ${total}G`;
   }

@@ -11,6 +11,10 @@ function formatDateTime(isoStr) {
   });
 }
 
+function winRateColor(rate) {
+  return `hsl(${Math.round(rate * 1.2)}, 65%, 55%)`;
+}
+
 // ── Module state ─────────────────────────────────
 let cachedAllPlays = null;
 let cachedLeaderboardData = null;
@@ -93,8 +97,7 @@ function renderBestTeams(teams) {
 function roleRateHtml(wins, total) {
   if (total === 0) return '—';
   const pct = Math.round(wins / total * 100);
-  const cls = pct >= 60 ? 'color-green' : pct >= 45 ? 'color-orange' : 'color-red';
-  return `<span class="${cls}">${pct}%</span> <span style="font-size:0.65rem;color:var(--text-muted)">${wins}/${total}</span>`;
+  return `<span style="color:${winRateColor(pct)}">${pct}%</span> <span style="font-size:0.65rem;color:var(--text-muted)">${wins}/${total}</span>`;
 }
 
 function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
@@ -113,7 +116,7 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
   const losses = stats?.losses ?? 0;
   const games  = stats?.games_played ?? 0;
   const rate   = games > 0 ? Math.round((wins / games) * 100) : null;
-  const rateClass = rate === null ? '' : rate >= 60 ? 'color-green' : rate >= 45 ? 'color-orange' : 'color-red';
+  const rateStyle = rate !== null ? `style="color:${winRateColor(rate)}"` : '';
 
   const smWins = roleStats?.smWins ?? 0;
   const smTotal = roleStats?.smTotal ?? 0;
@@ -133,7 +136,7 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
         <div class="profile-stat-label">Losses</div>
       </div>
       <div class="profile-stat">
-        <div class="profile-stat-value ${rateClass}">${rate !== null ? rate + '%' : '—'}</div>
+        <div class="profile-stat-value" ${rateStyle}>${rate !== null ? rate + '%' : '—'}</div>
         <div class="profile-stat-label">Win Rate</div>
       </div>
     </div>
@@ -180,7 +183,6 @@ function renderPlayersTable(data, profile) {
     const isMe = profile && row.id === profile.id;
     const eloClass = row.elo > 0 ? 'color-green' : 'color-red';
     const rate = Number(row.win_rate);
-    const rateClass = rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
     return `
       <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
         <td class="rank ${rankClass}">${rankLabel}</td>
@@ -188,7 +190,7 @@ function renderPlayersTable(data, profile) {
         <td class="elo-score ${eloClass}">${row.elo}</td>
         <td class="wins-count">${row.wins}</td>
         <td class="losses-count">${row.losses}</td>
-        <td class="win-rate ${row.games_played > 0 ? rateClass : ''}">${row.games_played > 0 ? rate + '%' : '—'}</td>
+        <td class="win-rate" ${row.games_played > 0 ? `style="color:${winRateColor(rate)}"` : ''}>${row.games_played > 0 ? rate + '%' : '—'}</td>
       </tr>`;
   }).join('');
 }
@@ -209,7 +211,6 @@ function renderTeamsTable(allPlays) {
     const rankClass = rank <= 3 ? `rank-${rank}` : '';
     const rankLabel = rank === 1 ? '1st' : rank === 2 ? '2nd' : rank === 3 ? '3rd' : `${rank}th`;
     const eloClass = t.elo > 0 ? 'color-green' : 'color-red';
-    const rateClass = t.rate >= 60 ? 'win-rate-high' : t.rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
     return `
       <tr>
         <td class="rank ${rankClass}">${rankLabel}</td>
@@ -217,7 +218,7 @@ function renderTeamsTable(allPlays) {
         <td class="elo-score ${eloClass}">${t.elo}</td>
         <td class="wins-count">${t.wins}</td>
         <td class="losses-count">${t.losses}</td>
-        <td class="win-rate ${t.total > 0 ? rateClass : ''}">${t.total > 0 ? t.rate + '%' : '—'}</td>
+        <td class="win-rate" ${t.total > 0 ? `style="color:${winRateColor(t.rate)}"` : ''}>${t.total > 0 ? t.rate + '%' : '—'}</td>
       </tr>`;
   }).join('');
 }
@@ -251,7 +252,6 @@ function renderRoleTable(allPlays, role) {
     const isMe = cachedProfile && row.id === cachedProfile.id;
     const eloClass = row.elo > 0 ? 'color-green' : 'color-red';
     const rate = row.total > 0 ? Math.round(row.wins / row.total * 100) : 0;
-    const rateClass = rate >= 60 ? 'win-rate-high' : rate >= 45 ? 'win-rate-mid' : 'win-rate-low';
     return `
       <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
         <td class="rank ${rankClass}">${rankLabel}</td>
@@ -259,7 +259,7 @@ function renderRoleTable(allPlays, role) {
         <td class="elo-score ${eloClass}">${row.elo}</td>
         <td class="wins-count">${row.wins}</td>
         <td class="losses-count">${row.losses}</td>
-        <td class="win-rate ${row.total > 0 ? rateClass : ''}">${row.total > 0 ? rate + '%' : '—'}</td>
+        <td class="win-rate" ${row.total > 0 ? `style="color:${winRateColor(rate)}"` : ''}>${row.total > 0 ? rate + '%' : '—'}</td>
       </tr>`;
   }).join('');
 }
