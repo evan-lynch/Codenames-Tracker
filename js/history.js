@@ -101,6 +101,9 @@ async function loadHistory() {
       ? `<div class="game-notes" style="margin-top:12px">${escapeHtml(game.notes)}</div>`
       : '';
 
+    const editBtn = isOwner
+      ? `<a href="edit.html?id=${game.id}" class="btn-edit-game">Edit</a>`
+      : '';
     const deleteBtn = isOwner
       ? `<button class="btn-remove-game" onclick="deleteGame('${game.id}', ${game.screenshot_url ? `'${escapeHtml(game.screenshot_url)}'` : 'null'}, this)">Remove</button>`
       : '';
@@ -113,7 +116,7 @@ async function loadHistory() {
             ${winBadge}
             ${screenshotBtn}
           </div>
-          ${deleteBtn}
+          <div style="display:flex;gap:8px;align-items:center">${editBtn}${deleteBtn}</div>
         </div>
 
         <div class="game-card-teams">

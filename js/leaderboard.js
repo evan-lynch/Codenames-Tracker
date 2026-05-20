@@ -151,7 +151,7 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
     <div class="profile-best-mate">
       <div class="profile-role-label">Best Teammate</div>
       <div class="profile-role-value">
-        <a href="player.html?id=${bestTeammate.id}" class="color-green" style="text-decoration:none;font-weight:700">${escapeHtml(bestTeammate.name)}</a>
+        <a href="player.html?id=${bestTeammate.id}" style="text-decoration:none;font-weight:700;color:var(--blue-bright)">${escapeHtml(bestTeammate.name)}</a>
         <span style="font-size:0.65rem;color:var(--text-muted)">${bestTeammate.rate}% · ${bestTeammate.wins}/${bestTeammate.total}</span>
       </div>
     </div>` : ''}
@@ -360,22 +360,25 @@ async function loadGameHistory(userId) {
       }).join('');
     }
 
-    const ssBtn = game.screenshot_url
-      ? `<a href="${escapeHtml(game.screenshot_url)}" target="_blank" rel="noopener" class="history-screenshot-btn">View Screenshot</a>`
+    const ssIcon = game.screenshot_url
+      ? `<a href="${escapeHtml(game.screenshot_url)}" target="_blank" rel="noopener" class="history-ss-icon" title="View screenshot"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>↗</a>`
       : '';
 
+    const editBtn = isOwner
+      ? `<a href="edit.html?id=${game.id}" class="btn-edit-game">Edit</a>`
+      : '';
     const removeBtn = isOwner
       ? `<button class="btn-remove-game" onclick="deleteGameInline('${game.id}', ${game.screenshot_url ? `'${escapeHtml(game.screenshot_url)}'` : 'null'}, this.closest('.history-game-card'))">Remove</button>`
       : '';
 
-    const cardFooter = (ssBtn || removeBtn)
-      ? `<div class="history-card-footer">${ssBtn}${removeBtn}</div>`
+    const cardFooter = (editBtn || removeBtn)
+      ? `<div class="history-card-footer">${editBtn}${removeBtn}</div>`
       : '';
 
     return `
       <div class="history-game-card" data-id="${game.id}">
         <div class="history-game-header">
-          <span class="history-game-date">${formatDateTime(game.created_at)}</span>
+          <span class="history-game-date">${formatDateTime(game.created_at)}${ssIcon}</span>
           ${winBadge}
         </div>
         <div class="history-teams">
@@ -422,7 +425,6 @@ async function init() {
   await Promise.all([
     loadLeaderboard(profile, allPlays),
     loadGameHistory(user?.id),
-    loadClueHOF(),
   ]);
 }
 
