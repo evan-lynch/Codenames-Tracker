@@ -193,7 +193,12 @@ function renderPlayersTable(data, profile, streaks = {}) {
   }
   const sorted = [...data]
     .map(r => ({ ...r, elo: r.wins - r.losses }))
-    .sort((a, b) => b.elo - a.elo || b.wins - a.wins);
+    .sort((a, b) =>
+      (b.elo - a.elo) ||
+      (Number(b.win_rate) - Number(a.win_rate)) ||
+      (b.wins - a.wins) ||
+      a.username.localeCompare(b.username)
+    );
 
   tbody.innerHTML = sorted.map((row, i) => {
     const rank = i + 1;
