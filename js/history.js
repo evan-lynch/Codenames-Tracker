@@ -73,6 +73,7 @@ async function loadHistory() {
 
   container.innerHTML = games.map(game => {
     const isOwner = user && game.created_by === user.id;
+    const canEdit = isOwner || currentProfile?.is_admin;
     const winBadge = game.winning_team === 'red'
       ? `<span class="badge badge-red">Red Wins</span>`
       : `<span class="badge badge-blue">Blue Wins</span>`;
@@ -107,10 +108,10 @@ async function loadHistory() {
       ? `<div class="game-notes" style="margin-top:12px">${escapeHtml(game.notes)}</div>`
       : '';
 
-    const editBtn = isOwner
+    const editBtn = canEdit
       ? `<a href="edit.html?id=${game.id}" class="btn-edit-game">Edit</a>`
       : '';
-    const deleteBtn = isOwner
+    const deleteBtn = canEdit
       ? `<button class="btn-remove-game" onclick="deleteGame('${game.id}', ${game.screenshot_url ? `'${escapeHtml(game.screenshot_url)}'` : 'null'}, this)">Remove</button>`
       : '';
 

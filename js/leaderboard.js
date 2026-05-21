@@ -206,8 +206,8 @@ function renderPlayersTable(data, profile, streaks = {}) {
     return `
       <tr ${isMe ? 'class="my-row"' : ''} onclick="window.location='player.html?id=${row.id}'">
         <td class="rank ${rankClass}">${rankLabel}</td>
-        <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}</a></td>
-        <td class="elo-score ${eloClass}" style="white-space:nowrap">${row.elo}${flameHtml(streak)}</td>
+        <td><a class="player-link" href="player.html?id=${row.id}">${escapeHtml(row.username)}${isMe ? ' <span class="you-badge">you</span>' : ''}${flameHtml(streak)}</a></td>
+        <td class="elo-score ${eloClass}">${row.elo}</td>
         <td class="wins-count">${row.wins}</td>
         <td class="losses-count">${row.losses}</td>
         <td class="win-rate" ${row.games_played > 0 ? `style="color:${winRateColor(rate)}"` : ''}>${row.games_played > 0 ? rate + '%' : '—'}</td>
@@ -412,6 +412,7 @@ async function loadGameHistory(userId) {
 
   container.innerHTML = games.map(game => {
     const isOwner = userId && game.created_by === userId;
+    const canEdit = isOwner || currentProfile?.is_admin;
     const winBadge = game.winning_team === 'red'
       ? `<span class="badge badge-red" style="font-size:0.6rem">Red Win</span>`
       : `<span class="badge badge-blue" style="font-size:0.6rem">Blue Win</span>`;
@@ -433,10 +434,10 @@ async function loadGameHistory(userId) {
       ? `<a href="${escapeHtml(game.screenshot_url)}" target="_blank" rel="noopener" class="history-ss-icon" title="View screenshot"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>↗</a>`
       : '';
 
-    const editBtn = isOwner
+    const editBtn = canEdit
       ? `<a href="edit.html?id=${game.id}" class="btn-edit-game">Edit</a>`
       : '';
-    const removeBtn = isOwner
+    const removeBtn = canEdit
       ? `<button class="btn-remove-game" onclick="deleteGameInline('${game.id}', ${game.screenshot_url ? `'${escapeHtml(game.screenshot_url)}'` : 'null'}, this.closest('.history-game-card'))">Remove</button>`
       : '';
 

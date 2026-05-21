@@ -123,7 +123,19 @@ body {
 }
 
 .nav-links { display: flex; align-items: center; gap: 12px; }
-.nav-user { color: var(--text-muted); font-size: 0.875rem; }
+.nav-user { color: var(--text-muted); font-size: 0.875rem; display: flex; align-items: center; gap: 6px; }
+.nav-admin-badge {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--orange);
+  border: 1px solid var(--orange);
+  border-radius: 3px;
+  padding: 1px 5px;
+  opacity: 0.8;
+}
 
 /* ── BUTTONS ─────────────────────────────────────── */
 .btn {
@@ -387,6 +399,12 @@ body {
   vertical-align: middle;
 }
 
+/* Center rank + all numeric columns; keep Player name left-aligned */
+.table th:first-child, .table td:first-child,
+.table th:nth-child(n+3), .table td:nth-child(n+3) {
+  text-align: center;
+}
+
 .table tr:last-child td { border-bottom: none; }
 .table tbody tr:hover { background: var(--surface2); cursor: pointer; }
 
@@ -406,6 +424,8 @@ body {
   text-decoration: none;
   font-weight: 700;
   font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
 }
 .player-link:hover { color: var(--orange); }
 
@@ -900,10 +920,7 @@ body {
   background: var(--surface2);
 }
 
-#game-history-list {
-  max-height: 420px;
-  overflow-y: auto;
-}
+#game-history-list {}
 
 .history-game-card {
   border-bottom: 1px solid var(--border);

@@ -29,7 +29,8 @@ async function init() {
     .single();
 
   if (error || !game) { window.location.href = 'index.html'; return; }
-  if (!user || game.created_by !== user.id) { window.location.href = 'index.html'; return; }
+  const isAdmin = currentProfile?.is_admin;
+  if (!user || (game.created_by !== user.id && !isAdmin)) { window.location.href = 'index.html'; return; }
 
   selectedTeam = game.winning_team;
   document.querySelector(`.team-option[data-team="${selectedTeam}"]`)?.classList.add('selected');

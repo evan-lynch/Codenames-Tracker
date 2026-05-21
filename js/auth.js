@@ -17,8 +17,11 @@ function renderNav() {
   if (!el) return;
 
   if (currentUser && currentProfile) {
+    const adminBadge = currentProfile.is_admin
+      ? `<span class="nav-admin-badge">Admin</span>`
+      : '';
     el.innerHTML = `
-      <span class="nav-user">${currentProfile.username}</span>
+      <span class="nav-user">${currentProfile.username}${adminBadge}</span>
       <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
     `;
   } else {
