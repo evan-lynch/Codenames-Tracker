@@ -70,6 +70,7 @@ async function loadPlayer() {
   const smRate  = smGames.length > 0 ? Math.round(smWins / smGames.length * 100) : null;
   const opRate  = opGames.length > 0 ? Math.round(opWins / opGames.length * 100) : null;
 
+  document.getElementById('stat-games').textContent = total;
   document.getElementById('stat-wins').textContent = wins;
   document.getElementById('stat-losses').textContent = losses;
 

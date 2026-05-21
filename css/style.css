@@ -892,6 +892,12 @@ body {
   letter-spacing: 2px;
   margin-bottom: 12px;
 }
+.section-subcount {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: -8px;
+  margin-bottom: 20px;
+}
 
 /* ── GAME HISTORY PANEL (inline on main page) ────── */
 .history-panel {

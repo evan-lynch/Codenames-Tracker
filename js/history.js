@@ -71,6 +71,9 @@ async function loadHistory() {
     return;
   }
 
+  const countEl = document.getElementById('history-count');
+  if (countEl) countEl.textContent = `${games.length} game${games.length !== 1 ? 's' : ''}`;
+
   container.innerHTML = games.map(game => {
     const isOwner = user && game.created_by === user.id;
     const canEdit = isOwner || currentProfile?.is_admin;
