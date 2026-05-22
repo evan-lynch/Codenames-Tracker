@@ -150,32 +150,31 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
   const opWins = roleStats?.opWins ?? 0;
   const opTotal = roleStats?.opTotal ?? 0;
 
+  const elo = wins - losses;
+  const eloClass = elo > 0 ? 'color-green' : elo < 0 ? 'color-red' : '';
+
   sidebar.innerHTML = `
     <a href="player.html?id=${profile.id}" class="profile-avatar">${escapeHtml(profile.username.charAt(0).toUpperCase())}</a>
     <div class="profile-username">${escapeHtml(profile.username)}</div>
     <div class="profile-login-username">${currentUser ? currentUser.email.split('@')[0] : ''}</div>
     <div class="profile-stats">
-      <div class="profile-stat">
-        <div class="profile-stat-value color-green">${wins}</div>
-        <div class="profile-stat-label">Wins</div>
+      <div class="profile-stat profile-stat-points">
+        <div class="profile-stat-value">${elo}</div>
+        <div class="profile-stat-label">Points</div>
       </div>
-      <div class="profile-stat">
-        <div class="profile-stat-value color-red">${losses}</div>
-        <div class="profile-stat-label">Losses</div>
-      </div>
-      <div class="profile-stat">
-        <div class="profile-stat-value" ${rateStyle}>${rate !== null ? rate + '%' : '—'}</div>
-        <div class="profile-stat-label">Win Rate</div>
-      </div>
-    </div>
-    <div class="profile-role-stats">
-      <div class="profile-role-stat">
-        <div class="profile-role-label">Spymaster</div>
-        <div class="profile-role-value">${roleRateHtml(smWins, smTotal)}</div>
-      </div>
-      <div class="profile-role-stat">
-        <div class="profile-role-label">Operative</div>
-        <div class="profile-role-value">${roleRateHtml(opWins, opTotal)}</div>
+      <div class="profile-stats-row">
+        <div class="profile-stat">
+          <div class="profile-stat-value color-green">${wins}</div>
+          <div class="profile-stat-label">Wins</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value color-red">${losses}</div>
+          <div class="profile-stat-label">Losses</div>
+        </div>
+        <div class="profile-stat">
+          <div class="profile-stat-value" ${rateStyle}>${rate !== null ? rate + '%' : '—'}</div>
+          <div class="profile-stat-label">Win Rate</div>
+        </div>
       </div>
     </div>
     <a href="player.html?id=${profile.id}" class="btn btn-ghost profile-view-btn">View My Profile</a>

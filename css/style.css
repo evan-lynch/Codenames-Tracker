@@ -315,8 +315,8 @@ body {
 }
 
 .profile-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   width: 100%;
   margin-bottom: 24px;
@@ -342,6 +342,14 @@ body {
 .profile-stat-value.color-green { color: var(--green); }
 .profile-stat-value.color-red   { color: var(--red-bright); }
 .profile-stat-value.color-orange { color: var(--orange); }
+
+.profile-stat-points { width: 100%; }
+
+.profile-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
 
 .profile-stat-label {
   font-size: 0.6rem;
@@ -912,6 +920,10 @@ body {
   color: var(--text-muted);
   opacity: 0.7;
   white-space: nowrap;
+}
+
+.rename-trigger-btn {
+  margin-bottom: 20px;
 }
 
 .btn-rename {
