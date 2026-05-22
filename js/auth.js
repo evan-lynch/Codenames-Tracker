@@ -21,7 +21,7 @@ function renderNav() {
       ? `<span class="nav-admin-badge">Admin</span>`
       : '';
     el.innerHTML = `
-      <span class="nav-user">${currentProfile.username}${adminBadge}</span>
+      <span class="nav-user">${currentUser.email.split('@')[0]}${adminBadge}</span>
       <button class="btn btn-ghost btn-sm" onclick="signOut()">Sign Out</button>
     `;
   } else {

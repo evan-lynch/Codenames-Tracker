@@ -45,11 +45,16 @@ async function loadPlayer() {
     const nameEl = document.getElementById('player-name');
     const editBtn = document.createElement('button');
     editBtn.className = 'btn-rename';
-    editBtn.title = 'Change name';
+    editBtn.title = 'Change display name';
     editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
     nameEl.appendChild(editBtn);
-
     editBtn.addEventListener('click', () => startRename(nameEl, playerId));
+
+    const loginUsername = currentUser.email.split('@')[0];
+    const loginNote = document.createElement('p');
+    loginNote.className = 'login-username-note';
+    loginNote.innerHTML = `Username: <strong>${loginUsername}</strong>`;
+    nameEl.insertAdjacentElement('afterend', loginNote);
   }
 
   const { data: gameRows, error: gamesError } = await db
@@ -218,11 +223,16 @@ function startRename(nameEl, playerId) {
   cancelBtn.className = 'btn btn-ghost btn-sm';
   cancelBtn.textContent = 'Cancel';
 
+  const hint = document.createElement('span');
+  hint.className = 'rename-hint';
+  hint.textContent = 'Display name only — your login username stays the same.';
+
   const row = document.createElement('div');
   row.className = 'rename-row';
   row.appendChild(input);
   row.appendChild(saveBtn);
   row.appendChild(cancelBtn);
+  row.appendChild(hint);
 
   nameEl.replaceWith(row);
   input.focus();

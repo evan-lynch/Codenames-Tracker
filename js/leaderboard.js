@@ -153,6 +153,7 @@ function renderProfileSidebar(profile, stats, roleStats, bestTeammate) {
   sidebar.innerHTML = `
     <a href="player.html?id=${profile.id}" class="profile-avatar">${escapeHtml(profile.username.charAt(0).toUpperCase())}</a>
     <div class="profile-username">${escapeHtml(profile.username)}</div>
+    <div class="profile-login-username">${currentUser ? currentUser.email.split('@')[0] : ''}</div>
     <div class="profile-stats">
       <div class="profile-stat">
         <div class="profile-stat-value color-green">${wins}</div>
