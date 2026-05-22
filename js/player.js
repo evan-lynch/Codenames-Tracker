@@ -40,6 +40,18 @@ async function loadPlayer() {
   document.getElementById('player-name').textContent = profile.username;
   document.title = `${profile.username} — Codenames Tracker`;
 
+  const isOwnProfile = currentUser && currentUser.id === playerId;
+  if (isOwnProfile) {
+    const nameEl = document.getElementById('player-name');
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-rename';
+    editBtn.title = 'Change name';
+    editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    nameEl.appendChild(editBtn);
+
+    editBtn.addEventListener('click', () => startRename(nameEl, playerId));
+  }
+
   const { data: gameRows, error: gamesError } = await db
     .from('game_players')
     .select(`
@@ -188,6 +200,94 @@ async function loadPlayer() {
       </div>
     `;
   }).join('');
+}
+
+function startRename(nameEl, playerId) {
+  const current = nameEl.textContent.trim();
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = current;
+  input.className = 'rename-input';
+  input.maxLength = 32;
+
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary btn-sm rename-save';
+  saveBtn.textContent = 'Save';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-ghost btn-sm';
+  cancelBtn.textContent = 'Cancel';
+
+  const row = document.createElement('div');
+  row.className = 'rename-row';
+  row.appendChild(input);
+  row.appendChild(saveBtn);
+  row.appendChild(cancelBtn);
+
+  nameEl.replaceWith(row);
+  input.focus();
+  input.select();
+
+  async function save() {
+    const newName = input.value.trim();
+    if (!newName || newName === current) { cancel(); return; }
+
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+
+    const { data: existing } = await db
+      .from('profiles').select('id').eq('username', newName).neq('id', playerId).single();
+    if (existing) {
+      alert('That name is already taken.');
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+      return;
+    }
+
+    const { error } = await db.from('profiles').update({ username: newName }).eq('id', playerId);
+    if (error) {
+      alert('Failed to update name: ' + error.message);
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+      return;
+    }
+
+    const h1 = document.createElement('h1');
+    h1.className = 'page-title';
+    h1.id = 'player-name';
+    h1.textContent = newName;
+    row.replaceWith(h1);
+    document.title = `${newName} — Codenames Tracker`;
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-rename';
+    editBtn.title = 'Change name';
+    editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    h1.appendChild(editBtn);
+    editBtn.addEventListener('click', () => startRename(h1, playerId));
+  }
+
+  function cancel() {
+    const h1 = document.createElement('h1');
+    h1.className = 'page-title';
+    h1.id = 'player-name';
+    h1.textContent = current;
+    row.replaceWith(h1);
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-rename';
+    editBtn.title = 'Change name';
+    editBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+    h1.appendChild(editBtn);
+    editBtn.addEventListener('click', () => startRename(h1, playerId));
+  }
+
+  saveBtn.addEventListener('click', save);
+  cancelBtn.addEventListener('click', cancel);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') save();
+    if (e.key === 'Escape') cancel();
+  });
 }
 
 loadPlayer();

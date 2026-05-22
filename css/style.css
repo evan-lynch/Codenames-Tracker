@@ -183,6 +183,9 @@ body {
   font-size: 2.8rem;
   letter-spacing: 3px;
   margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: var(--text);
 }
 
@@ -883,6 +886,36 @@ body {
   margin-bottom: 24px;
 }
 .back-link:hover { color: var(--text); }
+
+.btn-rename {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  vertical-align: middle;
+  opacity: 0.5;
+  transition: opacity 0.15s, color 0.15s;
+}
+.btn-rename:hover { opacity: 1; color: var(--orange); }
+
+.rename-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.rename-input {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.2rem;
+  background: var(--surface2);
+  border: 1px solid var(--orange);
+  border-radius: var(--radius);
+  color: var(--text);
+  padding: 4px 12px;
+  outline: none;
+  width: 260px;
+}
 
 .section-heading {
   font-size: 0.68rem;
