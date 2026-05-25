@@ -42,7 +42,7 @@ async function loadClues() {
   try {
     ({ data, error } = await db
       .from('clues')
-      .select('id, screenshot_url, created_at, uploaded_by, profiles(id, username)')
+      .select('id, screenshot_url, notes, created_at, uploaded_by, profiles(id, username)')
       .order('created_at', { ascending: false }));
   } catch (e) {
     grid.innerHTML = `<div class="empty-state">Error: ${e.message}</div>`;
@@ -59,18 +59,25 @@ async function loadClues() {
   }
 
   grid.innerHTML = data.map(clue => {
-    const isOwner = currentUser && clue.uploaded_by === currentUser.id;
+    const isOwner = currentUser && (clue.uploaded_by === currentUser.id || currentProfile?.is_admin);
+    const notesHtml = clue.notes
+      ? `<div class="clue-card-notes-wrap"><div class="clue-card-notes">${escapeHtml(clue.notes)}</div></div>`
+      : '';
     return `
       <div class="clue-card" data-id="${clue.id}">
         <a href="${escapeHtml(clue.screenshot_url)}" target="_blank" rel="noopener" class="clue-card-img-link">
           <img src="${escapeHtml(clue.screenshot_url)}" alt="Clue" class="clue-card-img" loading="lazy">
         </a>
+        ${notesHtml}
         <div class="clue-card-footer">
           <span class="clue-card-meta">
             <a href="player.html?id=${clue.profiles?.id}" class="player-link">${escapeHtml(clue.profiles?.username ?? '?')}</a>
             · ${formatDateTime(clue.created_at)}
           </span>
-          ${isOwner ? `<button class="btn-remove-game" onclick="deleteClue('${clue.id}', '${escapeHtml(clue.screenshot_url)}', this.closest('.clue-card'))">Remove</button>` : ''}
+          ${isOwner ? `<div style="display:flex;gap:8px;align-items:center">
+            <button class="clue-edit-note-btn" onclick="startEditNote(this, '${clue.id}')">${clue.notes ? 'Edit Note' : 'Add Note'}</button>
+            <button class="btn-remove-game" onclick="deleteClue('${clue.id}', '${escapeHtml(clue.screenshot_url)}', this.closest('.clue-card'))">Remove</button>
+          </div>` : ''}
         </div>
       </div>`;
   }).join('');
@@ -112,6 +119,7 @@ function toggleUploadForm() {
 function resetForm() {
   selectedFile = null;
   document.getElementById('clue-file').value = '';
+  document.getElementById('clue-notes').value = '';
   document.getElementById('clue-preview-wrap').style.display = 'none';
   document.getElementById('upload-label-text').textContent = 'Click to choose a screenshot';
   document.getElementById('upload-error').style.display = 'none';
@@ -144,9 +152,11 @@ async function handleUpload() {
 
     const { data: { publicUrl } } = db.storage.from('screenshots').getPublicUrl(path);
 
+    const notes = document.getElementById('clue-notes').value.trim() || null;
     const { error: insertError } = await db.from('clues').insert({
       screenshot_url: publicUrl,
       uploaded_by: currentUser.id,
+      notes,
     });
     if (insertError) throw insertError;
 
@@ -158,6 +168,46 @@ async function handleUpload() {
     btn.disabled = false;
     btn.textContent = 'Upload';
   }
+}
+
+async function startEditNote(triggerEl, clueId) {
+  const card = triggerEl.closest('.clue-card');
+  const notesWrap = card.querySelector('.clue-card-notes-wrap');
+  const currentText = card.querySelector('.clue-card-notes')?.textContent ?? '';
+
+  const editWrap = document.createElement('div');
+  editWrap.className = 'clue-note-edit-wrap';
+  editWrap.innerHTML = `
+    <textarea class="clue-note-textarea" rows="2">${escapeHtml(currentText)}</textarea>
+    <div class="clue-note-actions">
+      <button class="btn btn-primary btn-sm" style="font-size:0.78rem;padding:5px 12px">Save</button>
+      <button class="btn btn-ghost btn-sm" style="font-size:0.78rem;padding:5px 10px">Cancel</button>
+    </div>`;
+
+  const footer = card.querySelector('.clue-card-footer');
+  if (notesWrap) notesWrap.replaceWith(editWrap);
+  else card.insertBefore(editWrap, footer);
+
+  const textarea = editWrap.querySelector('textarea');
+  const [saveBtn, cancelBtn] = editWrap.querySelectorAll('button');
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+
+  cancelBtn.addEventListener('click', () => loadClues());
+
+  saveBtn.addEventListener('click', async () => {
+    const notes = textarea.value.trim() || null;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Saving...';
+    const { error } = await db.from('clues').update({ notes }).eq('id', clueId);
+    if (error) {
+      alert('Failed to save note: ' + error.message);
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save';
+      return;
+    }
+    await loadClues();
+  });
 }
 
 async function init() {
